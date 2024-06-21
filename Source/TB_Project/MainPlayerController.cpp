@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "NavigationSystem.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include <limits>
 #include "Global.h"
 #include "Character/GameCharacter.h"
 #include "Character/CPlayer.h"
@@ -17,7 +18,6 @@
 #include "Widgets/BasicUI.h"
 #include "Widgets/CombatUI.h"
 #include "Widgets/TargetingCircle.h"
-
 
 AMainPlayerController* AMainPlayerController::MainPlayerController = nullptr;
 
@@ -132,7 +132,7 @@ void AMainPlayerController::ExcludeCharacterInCombat(ACharacter* Char)
     DestroyTargetCharacterCircle();
 }
 
-void AMainPlayerController::UpdateCombatCharacters(ACharacter* Char)
+void AMainPlayerController::UpdateCombatCharacters(ACharacter* Char) // 죽은 캐릭터가 인자로 들어옴
 {
     if (CombatCharacters.Find(Char) == INDEX_NONE) return;
     
@@ -502,27 +502,27 @@ void AMainPlayerController::MouseLeftClick()
 ACharacter* AMainPlayerController::FindNearestTarget(ACharacter* Self)
 {
     AActor* nearestTarget = nullptr;
-    float nearestDistance = 6000.f;
     TArray<AActor*> targets;
 
-    if (Self->IsA<ACPlayer>())
+    float nearestDistance = std::numeric_limits<float>::max(); // float 최대값으로 초기화
+
+    if (Self->IsA<ACPlayer>())    // 본인이 아군이라면 타겟은 적군 캐릭터들
         UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), targets);
-    else if (Self->IsA<AEnemy>())
+    else if (Self->IsA<AEnemy>()) // 본인이 적군이라면 타겟은 아군 캐릭터들
         UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACPlayer::StaticClass(), targets);
 
     for (AActor* target : targets)
     {
         float dist = UKismetMathLibrary::Vector_Distance(target->GetActorLocation(), Self->GetActorLocation());
 
-        if (dist < nearestDistance)
+        if (dist < nearestDistance) // 본인과 가장 가까이 있는 타겟 찾기
         {
             nearestDistance = dist;
             nearestTarget = target;
         }
     }
 
-    if (nearestTarget)
-        return Cast<ACharacter>(nearestTarget);
+    if (nearestTarget) return Cast<ACharacter>(nearestTarget);
 
     return Cast<ACharacter>(targets[0]);
 }

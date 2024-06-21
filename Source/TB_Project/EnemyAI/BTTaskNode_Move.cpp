@@ -26,11 +26,11 @@ EBTNodeResult::Type UBTTaskNode_Move::ExecuteTask(UBehaviorTreeComponent& OwnerC
     bool combatMode = behavior->GetCombatMode();
     if (combatMode)
     {
-        CHelpers::GetComponent<UMyMovementComponent>(enemy)->SetRunMode();
+        CHelpers::GetComponent<UMyMovementComponent>(enemy)->SetRunMode(); // 전투 중 : 달리기
     }
     else
     {
-        CHelpers::GetComponent<UMyMovementComponent>(enemy)->SetWalkMode();
+        CHelpers::GetComponent<UMyMovementComponent>(enemy)->SetWalkMode(); // 평상시 : 걷기
         UNavigationSystemV1* navSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
         FNavLocation patrolLoc(enemy->GetActorLocation());
         bool result = navSystem->GetRandomPointInNavigableRadius(behavior->GetOriginLocation(), Radius, patrolLoc);
@@ -54,14 +54,9 @@ void UBTTaskNode_Move::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMe
     bool combatMode = behavior->GetCombatMode();
     FVector loc;
     if (combatMode)
-    {
         loc = behavior->GetMoveLocation();
-
-    }
     else
-    {
         loc = behavior->GetPatrolLocation();
-    }
 
     EPathFollowingRequestResult::Type result = controller->MoveToLocation(loc, 60.f);
 
@@ -75,5 +70,4 @@ void UBTTaskNode_Move::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMe
         FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
         break;
     }
-
 }
