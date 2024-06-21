@@ -272,23 +272,23 @@ void AMainPlayerController::StartCombat()
     for (FCombatCharacterInfo& info : CombatCharacterInfos)
     {
         UMyMovementComponent* moveComp = CHelpers::GetComponent<UMyMovementComponent>(info.Character);
-        if (moveComp) moveComp->SetStandMode(); // 이동 불가
+        if (moveComp) moveComp->SetStandMode(); // 이동 불가, 그 자리에 서 있기
 
-        // 선제권 숫자 부여
+        // 선제권 숫자 정하기
         int num = 0;
         while (num == 0)
         {
             num = GetRandomNumber(CombatCharacterInfos.Num());
         }
-        info.InitiativeNum = num;
+        info.InitiativeNum = num; //선제권 숫자 부여
     }
-    CombatUI = CreateWidget<UCombatUI>(this, CombatUIClass);
 
+    CombatUI = CreateWidget<UCombatUI>(this, CombatUIClass);
     CombatUI->AddToViewport();
     // 전투 UI 표시
     //CombatUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
-    // 선제권 숫자가 작은 순으로 UI 추가
+    // 선제권 숫자가 작은 순서대로(오름차순으로) 상단 UI 추가
     int index = 1;
     while (index - 1 != CombatCharacterInfos.Num())
     {
@@ -355,7 +355,7 @@ int AMainPlayerController::GetRandomNumber(int Max)
 }
 
 // 전투의 처음 InCurNum은 0부터 시작, 캐릭터 배열 인덱스가 0부터 시작하므로
-// 캐릭터의 선제권 숫자가 인자로 들어옴, 첫 번째 캐릭터는
+// 턴이 끝난 캐릭터의 선제권 숫자가 인자로 들어옴, 첫 번째 캐릭터는 1
 // InCurNum = 0 전투 시작, InCurNum = 1 첫 번째 캐릭터의 턴이 끝남
 void AMainPlayerController::StartTurn(int InCurNum) 
 {
@@ -366,21 +366,22 @@ void AMainPlayerController::StartTurn(int InCurNum)
         turnComp = GetTurnComp(CombatCharacters[InCurNum-1]);
         if (turnComp) turnComp->SetTurn(false);
 
-        BasicUI->DisableSkillButtons();
-        BasicUI->DisableEndTurnButton();
+        BasicUI->DisableSkillButtons();  // 스킬버튼 비활성화
+        BasicUI->DisableEndTurnButton(); // 턴종료버튼 비활성화
     }
 
     int nextTurnNum;
     // 다음 턴 넘버 갱신
-    if (InCurNum == CombatCharacters.Num()) nextTurnNum = 0;
+    // 모든 캐릭터의 턴이 끝남->다시 첫 번째 캐릭터부터 시작
+    if (InCurNum == CombatCharacters.Num()) nextTurnNum = 0; 
     else nextTurnNum = InCurNum;
 
     // 다음 캐릭터 턴 활성화
     turnComp = GetTurnComp(CombatCharacters[nextTurnNum]);
-    turnComp->SetTurn(true);
+    turnComp->SetTurn(true); 
 
-    CombatUI->UpdateCharButtons(nextTurnNum);
-    SetFixedCamera(false);
+    CombatUI->UpdateCharButtons(nextTurnNum); // 상단 UI 상태(Scale) 갱신
+    SetFixedCamera(false); // 카메라 고정 해제
 }
 
 void AMainPlayerController::ActivateMouseEvent()

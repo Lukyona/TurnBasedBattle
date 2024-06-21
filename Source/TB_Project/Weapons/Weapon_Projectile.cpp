@@ -15,7 +15,7 @@ AWeapon_Projectile::AWeapon_Projectile()
 	CHelpers::CreateActorComponent<UProjectileMovementComponent>(this, &Projectile, "Projectile");
 
 	Projectile->bAutoActivate = false;
-	Capsule->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Ignore);
+	Capsule->SetCollisionProfileName("Weapon");
 
 }
 

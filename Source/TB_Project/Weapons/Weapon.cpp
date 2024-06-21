@@ -11,7 +11,7 @@ AWeapon::AWeapon()
 	CHelpers::CreateComponent<USkeletalMeshComponent>(this, &SkeletalMesh, "SkeletalMesh", Root);
 	CHelpers::CreateComponent<UCapsuleComponent>(this, &Capsule, "Capsule", SkeletalMesh);
 
-	Capsule->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Ignore);
+	Capsule->SetCollisionProfileName("Weapon");
 }
 
 void AWeapon::BeginPlay()

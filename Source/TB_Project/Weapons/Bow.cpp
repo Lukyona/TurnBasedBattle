@@ -19,14 +19,13 @@ ABow::ABow()
 void ABow::SpawnProjectile()
 {
     ACPlayer* player = Cast<ACPlayer>(GetOwnerCharacter());
-    GetOwnerCharacter()->GetMesh()->UnHideBoneByName(player->GetWeaponBoneName());
+    player->GetMesh()->UnHideBoneByName(player->GetWeaponBoneName());
 
-    FTransform transform = OwnerCharacter->GetMesh()->GetSocketTransform("arrow_nock");
-    FActorSpawnParameters params;
-    params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-    Arrow = GetWorld()->SpawnActor<AArrow>(ArrowClass, transform, params);
+    FTransform transform = player->GetMesh()->GetSocketTransform("arrow_nock");
+    Arrow = GetWorld()->SpawnActor<AArrow>(ArrowClass, transform);
 
-    Arrow->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::KeepWorldTransform, "arrow_nock");
+    if (Arrow) 
+        Arrow->AttachToComponent(player->GetMesh(), FAttachmentTransformRules::KeepWorldTransform, "arrow_nock");
 }
 
 void ABow::Shoot()

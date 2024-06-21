@@ -15,6 +15,7 @@ class TB_PROJECT_API ABow : public APlayerWeapon
 	GENERATED_BODY()
 
 protected:
+    UPROPERTY(VisibleAnywhere)
 	TSubclassOf<class AArrow> ArrowClass;
 	AArrow* Arrow;
 
