@@ -22,25 +22,23 @@ void UTurnComponent::SetTurn(bool Turn)
 	SetCurActionAbility(0);
 	CurMovingAbility = OriginMovingAbility;
 
-	if (!bMyTurn) return;
+	if (!bMyTurn) return; // 자신의 턴이 아니라면 여기서 리턴
 
-	if (GetOwner()->IsA<ACPlayer>())
+	// 오너 = 자신이 서브 오브젝트로 달린 액터
+	if (GetOwner()->IsA<ACPlayer>()) // 오너가 플레이어블 캐릭터라면
 	{
 		MAINPC->ChangePlayer(Cast<ACPlayer>(GetOwner()));
 
 		// 무기 장착 상태 확인
 		UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(GetOwner());
-		if (weaponComp && !weaponComp->GetEquippedWeapon())
-		{
-			weaponComp->SetMode(weaponComp->GetCurrentWeaponType());
-		}
+		if (weaponComp && !weaponComp->GetEquippedWeapon()) // 무기가 장착되지 않았다면
+			weaponComp->SetMode(weaponComp->GetCurrentWeaponType()); // 무기 장착
 
 		MAINPC->GetBasicUI()->ResetMovingAbilityBarPercent();
 		MAINPC->GetBasicUI()->EnableSkillButtons();
 		MAINPC->GetBasicUI()->EnableEndTurnButton();
-
 	}
-	else if (GetOwner()->IsA<AEnemy>())
+	else if (GetOwner()->IsA<AEnemy>()) // 오너가 적 캐릭터라면
 	{
 		// UAIBlueprintHelperLibrary 사용하려면 Build.cs에 AIModule 추가할 것.
 		UAIBlueprintHelperLibrary::GetBlackboard(GetOwner())->SetValueAsBool("Turn", true);

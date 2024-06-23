@@ -470,7 +470,6 @@ void AMainPlayerController::MouseLeftClick()
 
     bool canMove = GetTurnComp(GetCurPlayer())->CanMove(dist);
 
-    //ClearMoveAbilityTimer();
     if (canMove) // 클릭한 위치까지 (현재 이동력으로) 이동 가능한지
     {
         FTransform transform;
@@ -495,8 +494,6 @@ void AMainPlayerController::MouseLeftClick()
         moveComp->SetStandMode();
         CombatUI->ShowMessage(EMessage::CannotMove);
     }
-
-
 }
 
 ACharacter* AMainPlayerController::FindNearestTarget(ACharacter* Self)

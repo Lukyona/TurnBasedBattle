@@ -67,7 +67,6 @@ void UFeetComponent::Trace(FName InName, float& OutDistance, FRotator& OutRotati
 	float roll = UKismetMathLibrary::DegAtan2(hitResult.Normal.Y, hitResult.Normal.Z);
 	float pitch = UKismetMathLibrary::DegAtan2(hitResult.Normal.X, hitResult.Normal.Z) * -1.0f;
 
-
 	OutRotation = FRotator(pitch, 0, roll);
 }
 
