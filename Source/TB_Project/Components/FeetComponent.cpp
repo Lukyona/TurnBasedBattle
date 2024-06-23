@@ -40,27 +40,28 @@ void UFeetComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 void UFeetComponent::Trace(FName InName, float& OutDistance, FRotator& OutRotation)
 {
-	FVector  socket = OwnerCharacter->GetMesh()->GetSocketLocation(InName);
+	FVector  socket = OwnerCharacter->GetMesh()->GetSocketLocation(InName); // InName : 보통 Foot_L, Foot_R
 
-	float    z_start = OwnerCharacter->GetActorLocation().Z;  // 허리부분
-	FVector  start = FVector(socket.X, socket.Y, z_start);    // 시작점
+	float    z_start = OwnerCharacter->GetActorLocation().Z;  // 캐릭터의 중간 높이 (허리 부분)
+						    // 발의 X,Y좌표
+	FVector  start = FVector(socket.X, socket.Y, z_start);    // 시작점 
 	
+					// 캐릭터의 발바닥 높이 - TraceDistance (발바닥보다 TraceDistance만큼 아래)
 	float    z_end = start.Z - OwnerCharacter->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - TraceDistance;
-	FVector  end = FVector(socket.X, socket.Y, z_end);        // 끝점
+	FVector  end = FVector(socket.X, socket.Y, z_end);       // 끝점
 
 	TArray<AActor*> ignores;
 	ignores.Add(OwnerCharacter);
 
 	FHitResult hitResult;
-	// TraceTypeQuery1 : Visibility
 	UKismetSystemLibrary::LineTraceSingle(GetWorld(), start, end, ETraceTypeQuery::TraceTypeQuery1,
-		true, ignores, EDrawDebugTrace::None, hitResult, true, FLinearColor::Green, FLinearColor::Red);
+		true, ignores, EDrawDebugTrace::ForOneFrame, hitResult, true, FLinearColor::Green, FLinearColor::Red);
 
 	OutDistance = 0.0f;
 	OutRotation = FRotator::ZeroRotator;
 
 	if (!hitResult.bBlockingHit) return;
-
+	    
 	float length = (hitResult.ImpactPoint - hitResult.TraceEnd).Size();  //지면보다 약 50아래
 	OutDistance = length + OffsetDistance - TraceDistance;               // 5정도 +로 되어있음
 
