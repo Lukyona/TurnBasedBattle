@@ -3,10 +3,10 @@
 
 #include "Character/Centaur.h"
 #include "Global.h"
-#include "Character/EnemyAnimInstance.h"
 #include "Components/MyMovementComponent.h"
 #include "Components/TurnComponent.h"
 #include "Components/HealthComponent.h"
+#include "Character/EnemyAnimInstance.h"
 #include "Weapons/EnemyWeapon.h"
 
 ACentaur::ACentaur()
@@ -48,5 +48,4 @@ ACentaur::ACentaur()
 void ACentaur::BeginPlay()
 {
     Super::BeginPlay();
-
 }

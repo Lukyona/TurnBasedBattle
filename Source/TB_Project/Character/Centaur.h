@@ -18,5 +18,4 @@ public:
 	ACentaur();
 
 	virtual void BeginPlay() override;
-
 };

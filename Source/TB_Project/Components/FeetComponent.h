@@ -22,6 +22,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
 		FRotator RightRotation;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Feet")
+		FVector LeftEffector;
+	UPROPERTY(BlueprintReadOnly, Category = "Feet")
+		FVector RightEffector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Feet")
+		float IKHipOffset;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -50,18 +57,17 @@ private:
 		float InterpSpeed = 50.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Trace")
-		float TraceDistance = 50.0f;
+		float TraceDistance = 200.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Trace")
 		float OffsetDistance = 5.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Trace")
-		FName LeftSocketName = "Foot_L";
+		FName LeftSocketName = "Foot_L_Socket";
 
 	UPROPERTY(EditAnywhere, Category = "Trace")
-		FName RightSocketName = "Foot_R";
+		FName RightSocketName = "Foot_R_Socket";
 
-	void Trace(FName InName, float& OutDistance, FRotator& OutRotation);
-
+	void Trace(FName InName, float& OutDistance, FRotator& OutRotation, FVector& OutHitLocation);
 
 };
