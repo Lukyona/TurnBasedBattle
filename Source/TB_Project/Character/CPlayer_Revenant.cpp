@@ -10,6 +10,7 @@
 #include "Components/HealthComponent.h"
 #include "Components/PlayerWeaponComponent.h"
 #include "Components/FeetComponent.h"
+#include "AIController.h"
 
 
 ACPlayer_Revenant::ACPlayer_Revenant()
@@ -38,8 +39,6 @@ ACPlayer_Revenant::ACPlayer_Revenant()
     HealthComponent->SetHealth(25);
     HealthComponent->SetMaxHealth(25);
 
-    FeetComponent->SetLeftSocketName("foot_l");
-    FeetComponent->SetRightSocketName("foot_r");
 }
 
 void ACPlayer_Revenant::BeginPlay()

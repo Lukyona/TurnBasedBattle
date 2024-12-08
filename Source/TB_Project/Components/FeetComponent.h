@@ -12,21 +12,13 @@ struct FFeetData
 	GENERATED_BODY()
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		FVector LeftDistance;   // X축 : 높이
+		FVector LeftEffector;
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		FVector RightDistance;  // X축 : 높이
-	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		FVector PelvisDistance;  // Z축 : 높이
+		FVector RightEffector;
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
 		FRotator LeftRotation;
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
 		FRotator RightRotation;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		FVector LeftEffector;
-	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		FVector RightEffector;
-
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
 		float IKHipOffset;
 };
@@ -35,32 +27,25 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TB_PROJECT_API UFeetComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
-	FFeetData Data;
-
-	class ACharacter* OwnerCharacter;
-public:	
+public:
 	UFeetComponent();
-	
-	FORCEINLINE FFeetData GetData() { return Data; }
-
-	void SetLeftSocketName(FName value) { LeftSocketName = value; }
-	void SetRightSocketName(FName value) { RightSocketName = value; }
-
 protected:
 	virtual void BeginPlay() override;
-
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Trace")
-		float InterpSpeed = 50.0f;
+	FFeetData Data;
+
+	class ACharacter* OwnerCharacter;
 
 	UPROPERTY(EditAnywhere, Category = "Trace")
-		float TraceDistance = 200.0f;
+		float InterpSpeed = 50.f;
 
 	UPROPERTY(EditAnywhere, Category = "Trace")
-		float OffsetDistance = 5.0f;
+		float TraceDistance = 200.f;
+
+	UPROPERTY(EditAnywhere, Category = "Trace")
+		float OffsetDistance = 5.f;
 
 	UPROPERTY(EditAnywhere, Category = "Trace")
 		FName LeftSocketName = "Foot_L_Socket";
@@ -68,6 +53,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Trace")
 		FName RightSocketName = "Foot_R_Socket";
 
-	void Trace(FName InName, float& OutDistance, FRotator& OutRotation, FVector& OutHitLocation);
+public:
+	FORCEINLINE FFeetData GetData()
+	{
+		return Data; 
+	}
+
+private:
+	void Trace(FName InName, float& OutFootOffset, FRotator& OutRotation, FVector& OutHitLocation);
 
 };
