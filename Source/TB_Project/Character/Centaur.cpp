@@ -6,18 +6,15 @@
 #include "Components/MyMovementComponent.h"
 #include "Components/TurnComponent.h"
 #include "Components/HealthComponent.h"
-#include "Character/EnemyAnimInstance.h"
 #include "Weapons/EnemyWeapon.h"
+
+//constexpr const TCHAR* MeshPath = TEXT("SkeletalMesh'/Game/Enemies/Centaur/QuadrapedCreatures/Centaur/Meshes/SK_Centaur.SK_Centaur'");
+//constexpr const TCHAR* AnimPath = TEXT("AnimBlueprint'/Game/Enemies/Centaur/ABP_Centaur.ABP_Centaur_C'");
+//constexpr const TCHAR* WeaponClassPath = TEXT("Class'/Script/TB_Project.Sword_Centaur'");
 
 ACentaur::ACentaur()
 {
-    USkeletalMesh* mesh;
-    CHelpers::GetAsset<USkeletalMesh>(&mesh, "SkeletalMesh'/Game/Enemies/Centaur/QuadrapedCreatures/Centaur/Meshes/SK_Centaur.SK_Centaur'");
-    GetMesh()->SetSkeletalMesh(mesh);
-
-    TSubclassOf<UEnemyAnimInstance> animInstance;
-    CHelpers::GetClass<UEnemyAnimInstance>(&animInstance, "AnimBlueprint'/Game/Enemies/Centaur/ABP_Centaur.ABP_Centaur_C'");
-    GetMesh()->SetAnimClass(animInstance);
+    //SetMeshAndAnim(MeshPath, AnimPath);
 
     GetMesh()->SetRelativeLocation(FVector(-51.f, 0, -99.f));
     GetMesh()->SetRelativeScale3D(FVector(0.7f));
@@ -25,7 +22,7 @@ ACentaur::ACentaur()
     GetCapsuleComponent()->SetCapsuleHalfHeight(100.f);
     GetCapsuleComponent()->SetCapsuleRadius(30.f);
 
-    AttackDistance = 140.f;
+    MinAttackDistance = 150.f;
     MinDamage = 4.f;
     MaxDamage = 7.f;
 
@@ -38,11 +35,8 @@ ACentaur::ACentaur()
     HealthComponent->SetHealth(15);
     HealthComponent->SetMaxHealth(15);
 
-    CHelpers::GetClass<AEnemyWeapon>(&WeaponClass, "Class'/Script/TB_Project.Sword_Centaur'");
+    //CHelpers::GetClass<AEnemyWeapon>(&WeaponClass, WeaponClassPath);
     WeaponSocketName = "SwordAction_Socket";
-
-    Tags.Add("Area3");
-
 }
 
 void ACentaur::BeginPlay()

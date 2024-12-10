@@ -24,7 +24,7 @@ AMushroom::AMushroom()
     GetCapsuleComponent()->SetCapsuleHalfHeight(69.f);
     GetCapsuleComponent()->SetCapsuleRadius(40.f);
 
-    AttackDistance = 150.f;
+    MinAttackDistance = 150.f;
     MinDamage = 2.f;
     MaxDamage = 3.f;
 
@@ -39,8 +39,6 @@ AMushroom::AMushroom()
 
     CHelpers::GetClass<AEnemyWeapon>(&WeaponClass, "Class'/Script/TB_Project.Fist_Enemy'");
     WeaponSocketName = "Fist1";
-
-    Tags.Add("Area2");
 }
 
 void AMushroom::BeginPlay()

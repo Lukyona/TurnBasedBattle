@@ -16,6 +16,6 @@ ASword::ASword()
     Capsule->SetCapsuleRadius(4.f);
     Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Capsule->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Ignore);
-    AttackDistance = 160.f;
+    MinAttackDistance = 160.f;
 
 }

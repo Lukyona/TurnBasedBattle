@@ -70,4 +70,22 @@ void UBTTaskNode_Move::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMe
         FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
         break;
     }
+
+    FVector CurrentLocation = enemy->GetActorLocation();
+    if (FVector::DistSquared(LastLocation, CurrentLocation) < FMath::Square(5.0f)) // 5.0f 기준 정체 거리
+    {
+        StuckTime += DeltaSeconds;
+        if (StuckTime > 2.0f) // 2초 동안 정체 상태
+        {
+            UE_LOG(LogTemp, Warning, TEXT("stppppppp"));
+            FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+            return;
+        }
+    }
+    else
+    {
+        StuckTime = 0.0f; // 정체가 아님
+    }
+
+    LastLocation = CurrentLocation; // 위치 갱신
 }

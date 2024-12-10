@@ -8,7 +8,7 @@
 
 AMagic::AMagic()
 {
-    AttackDistance = 1800.f;
+    MinAttackDistance = 1800.f;
 
     TSubclassOf<AActor> skill;
     CHelpers::GetClass<AActor>(&skill, "Blueprint'/Game/AdvancedShieldSystem/Shield.Shield_C'");

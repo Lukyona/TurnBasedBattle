@@ -8,4 +8,5 @@ AFist_Enemy::AFist_Enemy()
 {
     Capsule->SetCapsuleRadius(12.f);
     Capsule->SetCapsuleHalfHeight(12.f);
+
 }

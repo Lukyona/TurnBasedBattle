@@ -16,6 +16,10 @@ class TB_PROJECT_API UBTTaskNode_Move : public UBTTaskNode
 
 	float Radius = 500.f;
 
+	FVector LastLocation;
+	float StuckTime = 0.0f;
+
+
 public:
 	UBTTaskNode_Move();
 

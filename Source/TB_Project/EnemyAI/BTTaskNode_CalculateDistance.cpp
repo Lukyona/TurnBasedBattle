@@ -25,7 +25,7 @@ EBTNodeResult::Type UBTTaskNode_CalculateDistance::ExecuteTask(UBehaviorTreeComp
     ACharacter* target = behavior->GetTarget();
     if(!target) return EBTNodeResult::Failed;
 
-    float attckDist = enemy->GetAttackDistance();
+    float attckDist = enemy->GetMinAttackDistance();
     float dist = UKismetMathLibrary::Vector_Distance(target->GetActorLocation(), enemy->GetActorLocation());
 
     if (dist < attckDist)

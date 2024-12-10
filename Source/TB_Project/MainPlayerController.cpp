@@ -566,7 +566,7 @@ void AMainPlayerController::StartFollowingPlayer()
     for (ACPlayer* player : *BasicUI->GetPlayers())
     {
         if (player != GetCurPlayer())
-            player->FollowingCurPlayer();
+            player->FollowingCurrentPlayer();
     }
 }
 

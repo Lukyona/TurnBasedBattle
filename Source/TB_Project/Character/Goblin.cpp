@@ -24,7 +24,7 @@ AGoblin::AGoblin()
 
     GetCapsuleComponent()->SetCapsuleHalfHeight(80.f);
 
-    AttackDistance = 140.f;
+    MinAttackDistance = 140.f;
     MinDamage = 2.f;
     MaxDamage = 5.f;
 
@@ -38,8 +38,6 @@ AGoblin::AGoblin()
     HealthComponent->SetMaxHealth(10);
     CHelpers::GetClass<AEnemyWeapon>(&WeaponClass, "Class'/Script/TB_Project.Bat'");
     WeaponSocketName = "skt_weapon";
-
-    Tags.Add("Area1");
 
 }
 

@@ -27,7 +27,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TArray<class UAnimMontage*> HitMontages;
 
-	float AttackDistance;
+	float MinAttackDistance;
 
 	virtual void BeginPlay() override;
 
@@ -40,7 +40,7 @@ protected:
 public:
 	UDataTable* GetSkillInfoDT() { return SkillInfoDT; }
 	UDataTable* GetSkillAnimDT() { return SkillAnimDT; }
-	float GetAttackDistance() { return AttackDistance; }
+	float GetMinAttackDistance() { return MinAttackDistance; }
 
 	void Equip();
 	virtual void UnEquip();

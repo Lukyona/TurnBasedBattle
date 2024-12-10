@@ -30,7 +30,7 @@ protected:
 	class USphereComponent* AgroSphere;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-		float AttackDistance;
+		float MinAttackDistance;
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float MinDamage;
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
@@ -67,7 +67,10 @@ protected:
 	virtual void NotifyActorBeginCursorOver() override;
 	virtual void NotifyActorEndCursorOver() override;
 
+	//void SetMeshAndAnim(const FString& MeshPath, const FString& AnimClassPath);
+
 public:
+
 	virtual void Attack() override;
 	virtual void EndAttack() override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
@@ -84,7 +87,7 @@ public:
 	void Dead();
 	void EndDead();
 
-	FORCEINLINE float GetAttackDistance() { return AttackDistance; }
+	FORCEINLINE float GetMinAttackDistance() { return MinAttackDistance; }
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() { return BehaviorTree; }
 	FORCEINLINE uint8 GetTeamID() { return TeamID; }
 

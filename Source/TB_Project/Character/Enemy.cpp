@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Character/Enemy.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
@@ -8,16 +7,17 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Sound/SoundBase.h"
+
 #include "Global.h"
-#include "Character/CPlayer.h"
 #include "Components/MyMovementComponent.h"
 #include "Components/StateComponent.h"
 #include "Components/TurnComponent.h"
 #include "Components/HealthComponent.h"
 #include "Components/AIBehaviorComponent.h"
 #include "EnemyAI/EnemyController.h"
+#include "Character/EnemyAnimInstance.h"
+#include "Character/CPlayer.h"
 #include "Weapons/EnemyWeapon.h"
-
 
 AEnemy::AEnemy()
 {
@@ -31,20 +31,31 @@ AEnemy::AEnemy()
 
     CHelpers::CreateActorComponent<UAIBehaviorComponent>(this, &Behavior, "BehaviorComponent");
 
-    CHelpers::GetAsset<UBehaviorTree>(&BehaviorTree, "BehaviorTree'/Game/Enemies/AI/EnemyBT.EnemyBT'");
+    CHelpers::GetAsset<UBehaviorTree>(&BehaviorTree, TEXT("BehaviorTree'/Game/Enemies/AI/EnemyBT.EnemyBT'"));
     CHelpers::GetClass<AController>(&AIControllerClass, "Class'/Script/TB_Project.EnemyController'");
 
-    UCapsuleComponent* capsule = Cast<UCapsuleComponent>(GetRootComponent());
-    capsule->SetCollisionProfileName("Enemy", true);
+    UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(GetRootComponent());
+    Capsule->SetCollisionProfileName("Enemy", true);
    
     AgroSphere->SetRelativeLocation(FVector(350.f, 0.f, 0.f));
     AgroSphere->SetSphereRadius(700.f);
-    FCollisionResponseContainer cont;
-    cont.SetAllChannels(ECollisionResponse::ECR_Overlap);
-    AgroSphere->SetCollisionResponseToChannels(cont);
+    FCollisionResponseContainer Cont;
+    Cont.SetAllChannels(ECollisionResponse::ECR_Overlap);
+    AgroSphere->SetCollisionResponseToChannels(Cont);
     AgroSphere->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 }
+/*
+void AEnemy::SetMeshAndAnim(const FString& MeshPath, const FString& AnimClassPath)
+{
+    //USkeletalMesh* Mesh;
+    //CHelpers::GetAsset<USkeletalMesh>(&Mesh, *MeshPath);
+    //GetMesh()->SetSkeletalMesh(Mesh);
 
+    //TSubclassOf<UEnemyAnimInstance> AnimInstance;
+    //CHelpers::GetClass<UEnemyAnimInstance>(&AnimInstance, *AnimClassPath);
+    //GetMesh()->SetAnimClass(AnimInstance);
+}
+*/
 void AEnemy::BeginPlay()
 {
     Super::BeginPlay();
@@ -67,6 +78,7 @@ void AEnemy::Tick(float DeltaTime)
     
     Super::Tick(DeltaTime);
 }
+
 
 void AEnemy::NotifyActorBeginCursorOver()
 {

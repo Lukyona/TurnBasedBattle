@@ -9,6 +9,13 @@
 /**
  * 
  */
+class UInputComponent;
+class UPlayerAnimInstance;
+class UPlayerWeaponComponent;
+class UFeetComponent;
+class UDataTable;
+class UAnimMontage;
+
 UCLASS(BlueprintType)
 class TB_PROJECT_API ACPlayer : public AGameCharacter
 {
@@ -19,16 +26,24 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	class UPlayerAnimInstance* AnimInstance;
+	virtual void NotifyActorBeginCursorOver() override;
+	virtual void NotifyActorEndCursorOver() override;
+public:
+	virtual void Attack() override;
+	virtual void EndAttack() override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+protected:
+	UPROPERTY()
+	UPlayerAnimInstance* AnimInstance;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	class UPlayerWeaponComponent* WeaponComponent;
+	UPlayerWeaponComponent* WeaponComponent;
 
 	UPROPERTY(VisibleAnywhere)
-		class UFeetComponent* FeetComponent;
+	UFeetComponent* FeetComponent;
 
 	FTimerHandle FollowTimerHandle;
 
@@ -36,26 +51,41 @@ protected:
 	FName WeaponBoneName;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	class UDataTable* WeaponDT;
+	UDataTable* WeaponDT;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-		class UAnimMontage* AttackMontage;
+	UPROPERTY()
+	UAnimMontage* AttackMontage;
 
+public: //Getters and setters
+	USpringArmComponent* GetSpringArm() 
+	{
+		return SpringArm; 
+	}
 
-	virtual void NotifyActorBeginCursorOver() override;
-	virtual void NotifyActorEndCursorOver() override;
+	UAnimMontage* GetAttackMontage() 
+	{
+		return AttackMontage; 
+	}
+	void SetAttackMontage(UAnimMontage* Montage) 
+	{
+		AttackMontage = Montage; 
+	}
 
-public:
-	virtual void Attack() override;
-	virtual void EndAttack() override;
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	UPlayerWeaponComponent* GetWeaponComponent();
+	UDataTable* GetWeaponData() 
+	{
+		return WeaponDT; 
+	}
+	ACharacter* GetCombatTarget() 
+	{
+		return CombatTarget; 
+	}
+	FName GetWeaponBoneName() 
+	{
+		return WeaponBoneName;
+	}
 
-	void FollowingCurPlayer();
-	void ClearFollowTimer();
-
-	void SetAttackMontage(UAnimMontage* Montage) { AttackMontage = Montage; }
-	UAnimMontage* GetAttackMontage() { return AttackMontage; }
-
+public: //Core methods
 	void ResetSpringArm();
 
 	void Equip();
@@ -63,19 +93,15 @@ public:
 
 	void PlayUnEquipMontage(UAnimMontage* Montage);
 
+	void FollowingCurrentPlayer();
+	void ClearFollowTimer();
+
 	void MoveInCombat(FVector Location);
 	bool CanAttack();
 
 	void PlayAction();
 
 	void MouseClickLeft();
-
-	USpringArmComponent* GetSpringArm() { return SpringArm; }
-	UPlayerWeaponComponent* GetWeaponComponent();
-	UDataTable* GetWeaponData() { return WeaponDT; }
-	ACharacter* GetCombatTarget() { return CombatTarget; }
-
-	FName GetWeaponBoneName() { return WeaponBoneName; }
 
 	void PossessAIController();
 };

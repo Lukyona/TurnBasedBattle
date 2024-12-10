@@ -12,7 +12,7 @@ AGun::AGun()
     CHelpers::GetAsset<USkeletalMesh>(&mesh, "SkeletalMesh'/Game/Weapons/Player/Meshes/Gun/Gun.Gun'");
     SkeletalMesh->SetSkeletalMesh(mesh);
 
-    AttackDistance = 1500.f;
+    MinAttackDistance = 1500.f;
     Capsule->SetRelativeScale3D(FVector::ZeroVector);
     Capsule->SetGenerateOverlapEvents(false);
 

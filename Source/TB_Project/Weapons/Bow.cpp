@@ -9,7 +9,7 @@
 
 ABow::ABow()
 {
-    AttackDistance = 1200.f;
+    MinAttackDistance = 1200.f;
     Capsule->SetRelativeScale3D(FVector::ZeroVector);
     Capsule->SetGenerateOverlapEvents(false);
     CHelpers::GetClass<AArrow>(&ArrowClass, "Blueprint'/Game/Weapons/Player/BP_Arrow.BP_Arrow_C'");
