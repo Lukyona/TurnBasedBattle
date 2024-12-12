@@ -3,27 +3,11 @@
 
 #include "Components/AIBehaviorComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/Character.h"
 
 UAIBehaviorComponent::UAIBehaviorComponent()
 {
-	
-	PrimaryComponentTick.bCanEverTick = true;
-
-}
-
-
-void UAIBehaviorComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	
-}
-
-
-void UAIBehaviorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void UAIBehaviorComponent::SetCombatMode(bool Value)
@@ -59,7 +43,6 @@ void UAIBehaviorComponent::SetTurn(bool Value)
 bool UAIBehaviorComponent::GetCombatMode()
 {
 	return Blackboard->GetValueAsBool(CombatModeKey);
-
 }
 
 FVector UAIBehaviorComponent::GetPatrolLocation()

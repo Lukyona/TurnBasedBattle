@@ -35,7 +35,7 @@ AEnemy::AEnemy()
     CHelpers::GetAsset<UBehaviorTree>(&BehaviorTree, "BehaviorTree'/Game/Enemies/AI/EnemyBT.EnemyBT'");
     CHelpers::GetClass<AController>(&AIControllerClass, "Class'/Script/TB_Project.EnemyController'");
 
-    CHelpers::GetAsset<UDataTable>(&EnemyDataTable, "DataTable'/Game/DataTables/EnemyStats.EnemyStats'");
+    CHelpers::GetAsset<UDataTable>(&EnemyDataTable, "DataTable'/Game/DataTables/EnemyData.EnemyData'");
 
     UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(GetRootComponent());
     Capsule->SetCollisionProfileName("Enemy", true);
@@ -57,7 +57,7 @@ void AEnemy::InitializeFromDataTable(const FName& RowName)
         return;
     }
 
-    FEnemyStats* Row = EnemyDataTable->FindRow<FEnemyStats>(RowName, "");
+    FEnemyData* Row = EnemyDataTable->FindRow<FEnemyData>(RowName, "");
     if (Row)
     {
         SetMeshAndAnim(Row->MeshPath, Row->AnimBlueprintPath);

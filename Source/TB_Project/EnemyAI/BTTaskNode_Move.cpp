@@ -77,7 +77,6 @@ void UBTTaskNode_Move::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMe
         StuckTime += DeltaSeconds;
         if (StuckTime > 2.0f) // 2초 동안 정체 상태
         {
-            UE_LOG(LogTemp, Warning, TEXT("stppppppp"));
             FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
             return;
         }

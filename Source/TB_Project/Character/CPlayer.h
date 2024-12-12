@@ -19,7 +19,7 @@ class UDataTable;
 class UAnimMontage;
 
 USTRUCT(BlueprintType)
-struct FPlayerStats : public FTableRowBase
+struct FPlayerData : public FTableRowBase
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -45,7 +45,11 @@ struct FPlayerStats : public FTableRowBase
 	FString AnimBlueprintPath;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UDataTable* WeaponDT;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	FName WeaponBoneName;
+
 };
 
 UCLASS(BlueprintType)
@@ -82,7 +86,6 @@ protected:
 
 	FTimerHandle FollowTimerHandle;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	FName WeaponBoneName;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")

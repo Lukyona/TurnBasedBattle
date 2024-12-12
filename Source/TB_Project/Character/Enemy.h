@@ -18,7 +18,7 @@ class UAnimMontage;
 class USoundWave;
 
 USTRUCT(BlueprintType)
-struct FEnemyStats : public FTableRowBase
+struct FEnemyData : public FTableRowBase
 {
 	GENERATED_USTRUCT_BODY()
 

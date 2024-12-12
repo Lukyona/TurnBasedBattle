@@ -28,8 +28,6 @@ AGameCharacter::AGameCharacter()
 		CHelpers::CreateActorComponent<UHealthComponent>(this, &HealthComponent, "HealthComponent");
 	}
 
-	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
-
 	SpringArm->bDoCollisionTest = false;
 	SpringArm->SetRelativeRotation(FRotator(0, 90, 0));
 	SpringArm->bEnableCameraLag = true;
@@ -54,10 +52,10 @@ void AGameCharacter::SetMeshAndAnim(const FString& MeshPath, const FString& Anim
 	}
 }
 
-void AGameCharacter::SetTransform(const FVector& InTranslation, const FVector& InScale3D, const FRotator& InRotation)
+void AGameCharacter::SetTransform(const FVector& InTranslation, const FVector& InScale3D)
 {
 	GetMesh()->SetRelativeTransform(FTransform(
-		InRotation,
+		FRotator(0, -90, 0),
 		InTranslation,
 		InScale3D
 	));
@@ -99,14 +97,17 @@ void AGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 float AGameCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (!HealthComponent || !DamageText)
+	if (!HealthComponent)
 	{
 		return 0.0f;
 	}
 	HealthComponent->GetDamage(DamageAmount);
 
 	DamageText = GetWorld()->SpawnActor<ADamageAmount>(DamageTextClass, GetActorTransform());
-	DamageText->SetDamage(DamageAmount);
+	if(DamageText)
+	{
+		DamageText->SetDamage(DamageAmount);
+	}
 
 	return 0.0f;
 }

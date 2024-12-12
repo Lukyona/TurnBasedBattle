@@ -20,12 +20,10 @@
 
 ACPlayer::ACPlayer()
 {
-    CHelpers::GetAsset<UDataTable>(&PlayerDataTable, "DataTable'/Game/DataTables/PlayerStats.PlayerStats'");
+    CHelpers::GetAsset<UDataTable>(&PlayerDataTable, "DataTable'/Game/DataTables/PlayerData.PlayerData'");
 
     CHelpers::CreateActorComponent<UPlayerWeaponComponent>(this, &WeaponComponent, "WeaponComponent");
     CHelpers::CreateActorComponent<UFeetComponent>(this, &FeetComponent, "FeetComponent");
-
-    GetMesh()->SetRelativeLocation(FVector(0, 0, -90));
 
     bUseControllerRotationYaw = false;
 
@@ -46,7 +44,7 @@ void ACPlayer::InitializeFromDataTable(const FName& RowName)
         return;
     }
 
-    FPlayerStats* Row = PlayerDataTable->FindRow<FPlayerStats>(RowName, "");
+    FPlayerData* Row = PlayerDataTable->FindRow<FPlayerData>(RowName, "");
     if (Row)
     {
         SetMeshAndAnim(Row->MeshPath, Row->AnimBlueprintPath);
@@ -69,7 +67,7 @@ void ACPlayer::BeginPlay()
     Super::BeginPlay();
 
     AIController = Cast<AAIController>(GetController());
-    if (AIController)
+    if (AIController && AIController->GetPawn() != this)
     {
         AIController->Possess(this);
     }
@@ -324,10 +322,9 @@ void ACPlayer::PlayUnEquipMontage(UAnimMontage* Montage)
 
 void ACPlayer::PossessAIController()
 {
-    if (!AIController) 
+    if (!AIController || AIController->GetPawn() == this)
     {
         return;
     }
-
     AIController->Possess(this);
 }

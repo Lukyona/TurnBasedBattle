@@ -31,6 +31,7 @@ protected:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	virtual void Attack() {};
+public:
 	virtual void EndAttack() {};
 
 protected:
@@ -81,7 +82,7 @@ public://Core methods
 
 protected:
 	void SetMeshAndAnim(const FString& MeshPath, const FString& AnimClassPath);
-	void SetTransform(const FVector& InTranslation = FVector::ZeroVector, const FVector& InScale3D = FVector::OneVector, const FRotator& InRotation = FRotator::ZeroRotator);
+	void SetTransform(const FVector& InTranslation = FVector::ZeroVector, const FVector& InScale3D = FVector::OneVector);
 	void SetCapsuleSize(float HalfHeight, float Radius = 34.f);
 
 };
