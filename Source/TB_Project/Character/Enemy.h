@@ -4,11 +4,56 @@
 
 #include "CoreMinimal.h"
 #include "Character/GameCharacter.h"
+#include "Engine/DataTable.h"
 #include "Enemy.generated.h"
 
 /**
  * 
  */
+
+USTRUCT(BlueprintType)
+struct FEnemyStats : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		int32 MaxHealth;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		float MinAttackDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		float MinDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		float MaxDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		float WalkSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		float RunSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		float MovingAbility;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		int32 ActionAbility;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
+		FString MeshPath;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
+		FString AnimBlueprintPath;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
+		FString WeaponClassPath;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Socket")
+	FName WeaponSocketName;
+
+};
+
 UCLASS()
 class TB_PROJECT_API AEnemy : public AGameCharacter
 {
@@ -25,6 +70,9 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly)
 	class UAIBehaviorComponent* Behavior;
+
+	UPROPERTY()
+		UDataTable* EnemyDataTable;
 
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* AgroSphere;
@@ -67,7 +115,9 @@ protected:
 	virtual void NotifyActorBeginCursorOver() override;
 	virtual void NotifyActorEndCursorOver() override;
 
-	//void SetMeshAndAnim(const FString& MeshPath, const FString& AnimClassPath);
+	void InitializeFromDataTable(const FName& RowName);
+	void SetMeshAndAnim(const FString& MeshPath, const FString& AnimClassPath);
+
 
 public:
 

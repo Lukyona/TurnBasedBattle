@@ -2,6 +2,7 @@
 
 #include "Character/Enemy.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -31,8 +32,10 @@ AEnemy::AEnemy()
 
     CHelpers::CreateActorComponent<UAIBehaviorComponent>(this, &Behavior, "BehaviorComponent");
 
-    CHelpers::GetAsset<UBehaviorTree>(&BehaviorTree, TEXT("BehaviorTree'/Game/Enemies/AI/EnemyBT.EnemyBT'"));
+    CHelpers::GetAsset<UBehaviorTree>(&BehaviorTree, "BehaviorTree'/Game/Enemies/AI/EnemyBT.EnemyBT'");
     CHelpers::GetClass<AController>(&AIControllerClass, "Class'/Script/TB_Project.EnemyController'");
+
+    CHelpers::GetAsset<UDataTable>(&EnemyDataTable, "DataTable'/Game/DataTables/EnemyStats.EnemyStats'");
 
     UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(GetRootComponent());
     Capsule->SetCollisionProfileName("Enemy", true);
@@ -43,33 +46,67 @@ AEnemy::AEnemy()
     Cont.SetAllChannels(ECollisionResponse::ECR_Overlap);
     AgroSphere->SetCollisionResponseToChannels(Cont);
     AgroSphere->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+
+    Tags.Add("Enemy");
 }
-/*
+
 void AEnemy::SetMeshAndAnim(const FString& MeshPath, const FString& AnimClassPath)
 {
-    //USkeletalMesh* Mesh;
-    //CHelpers::GetAsset<USkeletalMesh>(&Mesh, *MeshPath);
-    //GetMesh()->SetSkeletalMesh(Mesh);
+    USkeletalMesh* EnemyMesh;
+    CHelpers::GetAsset<USkeletalMesh>(&EnemyMesh, *MeshPath);
+    GetMesh()->SetSkeletalMesh(EnemyMesh);
 
-    //TSubclassOf<UEnemyAnimInstance> AnimInstance;
-    //CHelpers::GetClass<UEnemyAnimInstance>(&AnimInstance, *AnimClassPath);
-    //GetMesh()->SetAnimClass(AnimInstance);
+    TSubclassOf<UEnemyAnimInstance> EnemyAnimInstance;
+    CHelpers::GetClass<UEnemyAnimInstance>(&EnemyAnimInstance, *AnimClassPath);
+    GetMesh()->SetAnimClass(EnemyAnimInstance);
 }
-*/
+
+void AEnemy::InitializeFromDataTable(const FName& RowName)
+{
+    if (!EnemyDataTable)
+    {
+        return;
+    }
+
+    FEnemyStats* Row = EnemyDataTable->FindRow<FEnemyStats>(RowName, "");
+    if (Row)
+    {
+        SetMeshAndAnim(Row->MeshPath, Row->AnimBlueprintPath);
+
+        MinAttackDistance = Row->MinAttackDistance;
+        MinDamage = Row->MinDamage;
+        MaxDamage = Row->MaxDamage;
+
+        MovementComponent->SetWalkSpeed(Row->WalkSpeed);
+        MovementComponent->SetRunSpeed(Row->RunSpeed);
+
+        TurnComponent->SetOriginMoveingAbility(Row->MovingAbility);
+        TurnComponent->SetOriginActionAbility(Row->ActionAbility);
+
+        HealthComponent->SetHealth(Row->MaxHealth);
+        HealthComponent->SetMaxHealth(Row->MaxHealth);
+
+        CHelpers::GetClass<AEnemyWeapon>(&WeaponClass, Row->WeaponClassPath);
+        WeaponSocketName = Row->WeaponSocketName;
+    }
+}
+
 void AEnemy::BeginPlay()
 {
     Super::BeginPlay();
 
     AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::OnAgroSphereBeginOverlap);
 
-    if (!WeaponClass) return;
+    if (!WeaponClass)
+    {
+        return;
+    }
 
     FTransform transform;
     FActorSpawnParameters params;
     params.Owner = this;
     Weapon = GetWorld()->SpawnActor<AEnemyWeapon>(WeaponClass, transform, params);
     Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocketName);
-
 }
 
 void AEnemy::Tick(float DeltaTime)
@@ -140,7 +177,6 @@ void AEnemy::OnAgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, 
     // 근처 적들(같은 태그) 모두 전투 모드로
     TArray<AActor*> characters;
     UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), AEnemy::StaticClass(), Tags[0], characters);
-
     for (AActor* actor : characters)
     {
         AEnemy* enemy = Cast<AEnemy>(actor);
