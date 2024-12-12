@@ -4,14 +4,13 @@
 #include "Global.h"
 #include "Weapons/EnemyWeapon.h"
 
+static const FName MushroomKey(TEXT("Mushroom"));
+
 AMushroom::AMushroom()
 {
-    InitializeFromDataTable("Mushroom");
-
-    GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -70.f));
-
-    GetCapsuleComponent()->SetCapsuleHalfHeight(69.f);
-    GetCapsuleComponent()->SetCapsuleRadius(40.f);
+    InitializeFromDataTable(MushroomKey);
+    SetTransform(FVector(0.f, 0.f, -70.f));
+    SetCapsuleSize(69.f, 40.f);
 }
 
 void AMushroom::BeginPlay()

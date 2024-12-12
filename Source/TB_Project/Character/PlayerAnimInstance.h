@@ -22,20 +22,20 @@ public:
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-        float Speed;
+    float Speed;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-        float Direction;
+    float Direction;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-        EWeaponType WeaponType = EWeaponType::UnArmed;
+    EWeaponType WeaponType = EWeaponType::UnArmed;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
-        FFeetData FeetData;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FFeetData FeetData;
 
 private:
     class ACharacter* OwnerCharacter;
 
     UFUNCTION()
-        void  OnWeaponTypeChanged(EWeaponType NewType);
+    void  OnWeaponTypeChanged(EWeaponType NewType);
 };

@@ -77,7 +77,7 @@ void UBasicUI::ChangePlayer(ACPlayer* TargetPlayer)
         player->PossessAIController();
 
         if (!MAINPC->IsCombatMode())
-            player->FollowingCurrentPlayer();
+            player->FollowCurrentPlayer();
     }
 
     SetPlayerImg();

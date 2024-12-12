@@ -285,8 +285,6 @@ void AMainPlayerController::StartCombat()
 
     CombatUI = CreateWidget<UCombatUI>(this, CombatUIClass);
     CombatUI->AddToViewport();
-    // 전투 UI 표시
-    //CombatUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
     // 선제권 숫자가 작은 순서대로(오름차순으로) 상단 UI 추가
     int index = 1;
@@ -396,7 +394,7 @@ void AMainPlayerController::DeactivateMouseEvent()
     bEnableClickEvents = false;
 }
 
-void AMainPlayerController::MouseLeftClick()
+void AMainPlayerController::OnMouseLeftClick()
 {
     if (!IsCombatMode() || !GetTurnComp(GetCurPlayer())->IsMyTurn()) return;
 
@@ -566,7 +564,7 @@ void AMainPlayerController::StartFollowingPlayer()
     for (ACPlayer* player : *BasicUI->GetPlayers())
     {
         if (player != GetCurPlayer())
-            player->FollowingCurrentPlayer();
+            player->FollowCurrentPlayer();
     }
 }
 

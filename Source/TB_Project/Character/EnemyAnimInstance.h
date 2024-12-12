@@ -16,13 +16,12 @@ class TB_PROJECT_API UEnemyAnimInstance : public UAnimInstance
 	
 protected:  
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-        float Speed;
+    float Speed;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-        float Direction;
+    float Direction;
 
 public:
 	void NativeUpdateAnimation(float DeltaSeconds) override;
-
 
 };

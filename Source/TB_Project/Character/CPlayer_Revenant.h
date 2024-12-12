@@ -15,7 +15,5 @@ class TB_PROJECT_API ACPlayer_Revenant : public ACPlayer
 	GENERATED_BODY()
 
 	ACPlayer_Revenant();
-
-protected:
-	virtual void BeginPlay() override;
+	void BeginPlay() override;
 };

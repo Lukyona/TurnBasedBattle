@@ -15,7 +15,5 @@ class TB_PROJECT_API ACPlayer_Aurora : public ACPlayer
 	GENERATED_BODY()
 	
 	ACPlayer_Aurora();
-
-protected:
-	virtual void BeginPlay() override;
+	void BeginPlay() override;
 };

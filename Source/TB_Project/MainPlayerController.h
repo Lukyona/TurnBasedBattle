@@ -127,8 +127,8 @@ public:
 	void ActivateMouseEvent();
 	UFUNCTION(BlueprintCallable, Category = "MouseEvent")
 	void DeactivateMouseEvent();
-	UFUNCTION(BlueprintCallable, Category = "MouseEvent")
-		void MouseLeftClick();
+
+	void OnMouseLeftClick();
 
 	UFUNCTION(BlueprintCallable, Category = "CombatCharacters")
 	void AddCombatCharacter(AGameCharacter* NewCharacter);

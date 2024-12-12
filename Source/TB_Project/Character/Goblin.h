@@ -17,6 +17,4 @@ class TB_PROJECT_API AGoblin : public AEnemy
 public:
 	AGoblin();
 
-	virtual void BeginPlay() override;
-
 };

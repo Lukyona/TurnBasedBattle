@@ -23,14 +23,11 @@ void UFeetComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	bool bShouldUpdateIK = OwnerCharacter->GetVelocity().Size() > 0.f || OwnerCharacter->IsPlayingRootMotion();
-	if (bShouldUpdateIK)
+	if (!bShouldUpdateIK)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Move %s"), *OwnerCharacter->GetName());
+		return;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("No Move %s"), *OwnerCharacter->GetName());
-	}
+
 	float    LeftOffset, RightOffset;
 	FRotator LeftRotator, RightRotator;
 	FVector LeftHitLoc, RightHitLoc;

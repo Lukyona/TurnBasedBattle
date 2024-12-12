@@ -50,17 +50,6 @@ AEnemy::AEnemy()
     Tags.Add("Enemy");
 }
 
-void AEnemy::SetMeshAndAnim(const FString& MeshPath, const FString& AnimClassPath)
-{
-    USkeletalMesh* EnemyMesh;
-    CHelpers::GetAsset<USkeletalMesh>(&EnemyMesh, *MeshPath);
-    GetMesh()->SetSkeletalMesh(EnemyMesh);
-
-    TSubclassOf<UEnemyAnimInstance> EnemyAnimInstance;
-    CHelpers::GetClass<UEnemyAnimInstance>(&EnemyAnimInstance, *AnimClassPath);
-    GetMesh()->SetAnimClass(EnemyAnimInstance);
-}
-
 void AEnemy::InitializeFromDataTable(const FName& RowName)
 {
     if (!EnemyDataTable)
@@ -88,6 +77,10 @@ void AEnemy::InitializeFromDataTable(const FName& RowName)
 
         CHelpers::GetClass<AEnemyWeapon>(&WeaponClass, Row->WeaponClassPath);
         WeaponSocketName = Row->WeaponSocketName;
+
+        AttackMontages = Row->AttackMontages;
+        HitMontage = Row->HitMontage;
+        DeadMontage = Row->DeadMontage;
     }
 }
 
@@ -102,47 +95,70 @@ void AEnemy::BeginPlay()
         return;
     }
 
-    FTransform transform;
-    FActorSpawnParameters params;
-    params.Owner = this;
-    Weapon = GetWorld()->SpawnActor<AEnemyWeapon>(WeaponClass, transform, params);
-    Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocketName);
+    FTransform Transform;
+    FActorSpawnParameters Params;
+    Params.Owner = this;
+    Weapon = GetWorld()->SpawnActor<AEnemyWeapon>(WeaponClass, Transform, Params);
+    if(Weapon)
+    {
+        Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocketName);
+    }
 }
 
 void AEnemy::Tick(float DeltaTime)
 {
-    if (StateComponent->IsDeadMode()) return;
+    if (StateComponent->IsDeadMode()) 
+    {
+        return;
+    }
     
     Super::Tick(DeltaTime);
 }
 
-
 void AEnemy::NotifyActorBeginCursorOver()
 {
+    if (!MAINPC || !HealthComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("MAINPC or HealthComponent is null. NotifyActorBeginCursorOver skipped."));
+        return;
+    }
+
     if(HealthComponent->IsAlive())
+    {
         MAINPC->SpawnTargetCharacterCircle(this);
+    }
 
-    int cur = HealthComponent->GetHealth();
-    int max = HealthComponent->GetMaxHealth();
+    int32 CurHealth = HealthComponent->GetHealth();
+    int32 MaxHealth = HealthComponent->GetMaxHealth();
 
-    MAINPC->ShowEnemyInfo(GetName(), cur, max);
+    MAINPC->ShowEnemyInfo(GetName(), CurHealth, MaxHealth);
 }
 
 void AEnemy::NotifyActorEndCursorOver()
 {
+    if (!MAINPC || !HealthComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("MAINPC or HealthComponent is null. NotifyActorBeginCursorOver skipped."));
+        return;
+    }
     if (HealthComponent->IsAlive())
+    {
         MAINPC->DestroyTargetCharacterCircle();
+    }
 
     MAINPC->HideEnemyInfo();
 }
 
 void AEnemy::Attack()
 {
-    if (bIsAttacking) return;
+    if (bIsAttacking) 
+    {
+        return;
+    }
 
     bIsAttacking = true;
-    int idx = UKismetMathLibrary::RandomIntegerInRange(0, AttackMontages.Num() - 1);
-    PlayAnimMontage(AttackMontages[idx]);
+    int32 Index = UKismetMathLibrary::RandomIntegerInRange(0, AttackMontages.Num() - 1);
+    PlayAnimMontage(AttackMontages[Index]);
 }
 
 void AEnemy::EndAttack()
@@ -156,7 +172,10 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 
     if (HealthComponent->IsAlive())
     {
-        if (HitMontage) PlayAnimMontage(HitMontage);
+        if (HitMontage) 
+        {
+            PlayAnimMontage(HitMontage);
+        }
     }
     else
     {
@@ -171,23 +190,25 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 
 void AEnemy::OnAgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (bIsCombatMode) return;
-    if (!OtherActor->ActorHasTag("Player")) return;
-
-    // 근처 적들(같은 태그) 모두 전투 모드로
-    TArray<AActor*> characters;
-    UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), AEnemy::StaticClass(), Tags[0], characters);
-    for (AActor* actor : characters)
+    if (bIsCombatMode || !OtherActor->ActorHasTag("Player") || !MAINPC)
     {
-        AEnemy* enemy = Cast<AEnemy>(actor);
-        enemy->Behavior->SetCombatMode(true);
-        MAINPC->AddCombatCharacter(Cast<AGameCharacter>(actor));
+        return;
     }
 
-    UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ACPlayer::StaticClass(), "Player" , characters);
-    for (AActor* player : characters)
+    // 근처 적들(같은 태그) 모두 전투 모드로
+    TArray<AActor*> Characters;
+    UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), AEnemy::StaticClass(), Tags[0], Characters);
+    for (AActor* Actor : Characters)
     {
-        MAINPC->AddCombatCharacter(Cast<AGameCharacter>(player));
+        AEnemy* Enemy = Cast<AEnemy>(Actor);
+        Enemy->Behavior->SetCombatMode(true);
+        MAINPC->AddCombatCharacter(Cast<AGameCharacter>(Actor));
+    }
+
+    UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ACPlayer::StaticClass(), "Player" , Characters);
+    for (AActor* Player : Characters)
+    {
+        MAINPC->AddCombatCharacter(Cast<AGameCharacter>(Player));
     }
 
     MAINPC->StartCombat();
@@ -197,14 +218,12 @@ void AEnemy::Dead()
 {
     AgroSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    if (DeadMontage) PlayAnimMontage(DeadMontage);
+    if (DeadMontage)
+    {
+        PlayAnimMontage(DeadMontage);
+    }
 
     MAINPC->ExcludeCharacterInCombat(this);
-
-    if (!DeadSound) return;
-
-    USoundBase* deadSound = Cast<USoundBase>(DeadSound);
-    UGameplayStatics::PlaySoundAtLocation(GetWorld(), deadSound, GetActorLocation());
 }
 
 void AEnemy::EndDead()

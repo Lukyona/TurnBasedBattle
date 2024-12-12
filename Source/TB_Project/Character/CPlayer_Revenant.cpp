@@ -3,6 +3,8 @@
 
 #include "Character/CPlayer_Revenant.h"
 #include "GameFramework/PlayerController.h"
+#include "AIController.h"
+
 #include "Global.h"
 #include "Character/PlayerAnimInstance.h"
 #include "Components/MyMovementComponent.h"
@@ -10,51 +12,38 @@
 #include "Components/HealthComponent.h"
 #include "Components/PlayerWeaponComponent.h"
 #include "Components/FeetComponent.h"
-#include "AIController.h"
 
+static const FName RevenantKey(TEXT("Revenant"));
 
 ACPlayer_Revenant::ACPlayer_Revenant()
 {
-    USkeletalMesh* mesh;
-    CHelpers::GetAsset<USkeletalMesh>(&mesh, "SkeletalMesh'/Game/Characters/ParagonRevenant/Characters/Heroes/Revenant/Meshes/Revenant.Revenant'");
-    GetMesh()->SetSkeletalMesh(mesh);
+    InitializeFromDataTable(RevenantKey);
 
-    GetMesh()->SetRelativeLocation(FVector(10, 0, -98));
-    GetMesh()->SetRelativeScale3D(FVector(0.9f));
-
-    TSubclassOf<UPlayerAnimInstance> animInstance;
-    CHelpers::GetClass<UPlayerAnimInstance>(&animInstance, "AnimBlueprint'/Game/Characters/Revenant/ABP_Revenent.ABP_Revenent_C'");
-    GetMesh()->SetAnimClass(animInstance);
-
-    WeaponBoneName = "weapon_l";
-
-    GetCapsuleComponent()->SetCapsuleHalfHeight(94.f);
-    GetCapsuleComponent()->SetCapsuleRadius(34.f);
-
-    MovementComponent->SetWalkSpeed(200.f);
-    MovementComponent->SetRunSpeed(550.f);
-
-    TurnComponent->SetOriginMoveingAbility(1000.f);
-
-    HealthComponent->SetHealth(25);
-    HealthComponent->SetMaxHealth(25);
-
+    SetTransform(FVector(10, 0, -98), FVector(0.9f));
+    SetCapsuleSize(94.f, 37.f);
 }
 
 void ACPlayer_Revenant::BeginPlay()
 {
     Super::BeginPlay();
 
-    APlayerController* controller = Cast<APlayerController>(GetController());
-    if(controller)
-        AMainPlayerController::SetMainPC(controller);
+    APlayerController* MyController = Cast<APlayerController>(GetController());
+    if(MyController)
+    {
+        AMainPlayerController::SetMainPC(MyController);
+    }
 
-    FTransform transform;
-    AIController = GetWorld()->SpawnActor<AAIController>(AIControllerClass, transform);
+    FTransform Transform;
+    AIController = GetWorld()->SpawnActor<AAIController>(AIControllerClass, Transform);
 
-    MAINPC->StartFollowingPlayer();
+    if(MAINPC)
+    {
+        MAINPC->StartFollowingPlayer();
+    }
 
-    WeaponComponent->SetCurrentWeapon(EWeaponType::Gun);
-    WeaponComponent->SetSkillIcons();
-
+    if (WeaponComponent)
+    {
+        WeaponComponent->SetCurrentWeapon(EWeaponType::Gun);
+        WeaponComponent->SetSkillIcons();
+    }
 }

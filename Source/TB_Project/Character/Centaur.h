@@ -16,6 +16,4 @@ class TB_PROJECT_API ACentaur : public AEnemy
 	
 public:
 	ACentaur();
-
-	virtual void BeginPlay() override;
 };

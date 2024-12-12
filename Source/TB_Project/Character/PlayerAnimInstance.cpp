@@ -9,24 +9,33 @@
 void UPlayerAnimInstance::NativeBeginPlay()
 {
     OwnerCharacter = Cast<ACharacter>(TryGetPawnOwner());
-    if (!OwnerCharacter) return;
+    if (!OwnerCharacter) 
+    {
+        return;
+    }
 
-    UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(OwnerCharacter);
-    weaponComp->OnWeaponTypeChanged.AddDynamic(this, &UPlayerAnimInstance::OnWeaponTypeChanged);
+    UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(OwnerCharacter);
+    if(WeaponComp)
+    {
+        WeaponComp->OnWeaponTypeChanged.AddDynamic(this, &UPlayerAnimInstance::OnWeaponTypeChanged);
+    }
 }
 
 void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
-    if (!OwnerCharacter) return;
+    if (!OwnerCharacter) 
+    {
+        return;
+    }
 
     Speed = UKismetMathLibrary::VSizeXY(OwnerCharacter->GetVelocity());
     Direction = CalculateDirection(OwnerCharacter->GetVelocity(), OwnerCharacter->GetControlRotation());
 
-    UFeetComponent* feet = CHelpers::GetComponent<UFeetComponent>(OwnerCharacter);
-
-    if (feet)
-        FeetData = feet->GetData();
-
+    UFeetComponent* FeetComp = CHelpers::GetComponent<UFeetComponent>(OwnerCharacter);
+    if (FeetComp)
+    {
+        FeetData = FeetComp->GetData();
+    }
 }
 
 void UPlayerAnimInstance::OnWeaponTypeChanged(EWeaponType NewType)

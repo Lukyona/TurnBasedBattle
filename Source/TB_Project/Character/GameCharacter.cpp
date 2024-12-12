@@ -5,13 +5,13 @@
 #include "AIController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+
 #include "Global.h"
 #include "Components/MyMovementComponent.h"
 #include "Components/StateComponent.h"
 #include "Components/TurnComponent.h"
 #include "Components/HealthComponent.h"
 #include "Widgets/DamageAmount.h"
-
 
 AGameCharacter::AGameCharacter()
 {
@@ -37,19 +37,54 @@ AGameCharacter::AGameCharacter()
 	CHelpers::GetClass<ADamageAmount>(&DamageTextClass, "Blueprint'/Game/UI/BP_DamageAmount.BP_DamageAmount_C'");
 }
 
+void AGameCharacter::SetMeshAndAnim(const FString& MeshPath, const FString& AnimClassPath)
+{
+	USkeletalMesh* CharacterMesh = nullptr;
+	CHelpers::GetAsset<USkeletalMesh>(&CharacterMesh, *MeshPath);
+	if(CharacterMesh)
+	{
+		GetMesh()->SetSkeletalMesh(CharacterMesh);
+	}
+
+	TSubclassOf<UAnimInstance> CharacterAnimInstance = nullptr;
+	CHelpers::GetClass<UAnimInstance>(&CharacterAnimInstance, *AnimClassPath);
+	if(CharacterAnimInstance)
+	{
+		GetMesh()->SetAnimClass(CharacterAnimInstance);
+	}
+}
+
+void AGameCharacter::SetTransform(const FVector& InTranslation, const FVector& InScale3D, const FRotator& InRotation)
+{
+	GetMesh()->SetRelativeTransform(FTransform(
+		InRotation,
+		InTranslation,
+		InScale3D
+	));
+}
+
+void AGameCharacter::SetCapsuleSize(float HalfHeight, float Radius)
+{
+	GetCapsuleComponent()->SetCapsuleHalfHeight(HalfHeight);
+	GetCapsuleComponent()->SetCapsuleRadius(Radius);
+}
+
 void AGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	AIController = Cast<AAIController>(GetController());
-
 }
 
 void AGameCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!CombatTarget || !MovementComponent->CanInterp()) return;
+	if (!CombatTarget || !MovementComponent || !MovementComponent->CanInterp())
+	{
+		return;
+	}
 
+	//타겟쪽으로 회전
 	FVector MyLoc = GetActorLocation();
 	FVector TargetLoc = CombatTarget->GetActorLocation();
 	FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLoc, TargetLoc);
@@ -64,17 +99,16 @@ void AGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 float AGameCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (!HealthComponent || !DamageText)
+	{
+		return 0.0f;
+	}
 	HealthComponent->GetDamage(DamageAmount);
 
 	DamageText = GetWorld()->SpawnActor<ADamageAmount>(DamageTextClass, GetActorTransform());
 	DamageText->SetDamage(DamageAmount);
 
 	return 0.0f;
-}
-
-void AGameCharacter::SetCombatTarget(ACharacter* Target)
-{
-	CombatTarget = Target;
 }
 
 UStateComponent* AGameCharacter::GetStateComponent()
@@ -89,10 +123,11 @@ UTurnComponent* AGameCharacter::GetTurnComponent()
 
 FVector AGameCharacter::GetCameraWorldLocation()
 {
-	if (!Camera) return FVector::ZeroVector;
+	if (!Camera) 
+	{
+		return FVector::ZeroVector;
+	}
 
 					// GetWorldLocation() 대신
 	return Camera->GetComponentLocation();
 }
-
-

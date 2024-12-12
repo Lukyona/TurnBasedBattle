@@ -9,30 +9,12 @@
 #include "Components/HealthComponent.h"
 #include "Components/PlayerWeaponComponent.h"
 
+static const FName SparrowKey(TEXT("Sparrow"));
 ACPlayer_Sparrow::ACPlayer_Sparrow()
 {
-    USkeletalMesh* mesh;
-    CHelpers::GetAsset<USkeletalMesh>(&mesh, "SkeletalMesh'/Game/ParagonSparrow/Characters/Heroes/Sparrow/Skins/Rogue/Meshes/Sparrow_Rogue.Sparrow_Rogue'");
-    GetMesh()->SetSkeletalMesh(mesh);
-
-    GetMesh()->SetRelativeLocation(FVector(11, 0, -86));
-
-    TSubclassOf<UPlayerAnimInstance> animInstance;
-    CHelpers::GetClass<UPlayerAnimInstance>(&animInstance, "AnimBlueprint'/Game/Characters/Sparrow/ABP_Sparrow.ABP_Sparrow_C'");
-    GetMesh()->SetAnimClass(animInstance);
-
-    WeaponBoneName = "bow_base";
-
-    GetCapsuleComponent()->SetCapsuleHalfHeight(90.f);
-    GetCapsuleComponent()->SetCapsuleRadius(34.f);
-
-    MovementComponent->SetWalkSpeed(300.f);
-    MovementComponent->SetRunSpeed(600.f);
-
-    TurnComponent->SetOriginMoveingAbility(800.f);
-
-    HealthComponent->SetHealth(20);
-    HealthComponent->SetMaxHealth(20);
+    InitializeFromDataTable(SparrowKey);
+    SetTransform(FVector(11, 0, -86));
+    SetCapsuleSize(90.f);
 }
 
 void ACPlayer_Sparrow::BeginPlay()
@@ -40,9 +22,10 @@ void ACPlayer_Sparrow::BeginPlay()
     Super::BeginPlay();
     
     GetMesh()->HideBoneByName("arrow_nock", EPhysBodyOp::PBO_None);
-
-    WeaponComponent->SetCurrentWeapon(EWeaponType::Bow);
-
+    if(WeaponComponent)
+    {
+        WeaponComponent->SetCurrentWeapon(EWeaponType::Bow);
+    }
 }
 
 void ACPlayer_Sparrow::UnEquip()

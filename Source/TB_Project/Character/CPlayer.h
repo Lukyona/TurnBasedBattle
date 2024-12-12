@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "Character/GameCharacter.h"
+#include "Components/PlayerWeaponComponent.h"
 #include "CPlayer.generated.h"
 
 /**
@@ -15,6 +17,36 @@ class UPlayerWeaponComponent;
 class UFeetComponent;
 class UDataTable;
 class UAnimMontage;
+
+USTRUCT(BlueprintType)
+struct FPlayerStats : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 MaxHealth;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float WalkSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float RunSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float MovingAbility;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 ActionAbility;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
+	FString MeshPath;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
+	FString AnimBlueprintPath;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	FName WeaponBoneName;
+};
 
 UCLASS(BlueprintType)
 class TB_PROJECT_API ACPlayer : public AGameCharacter
@@ -37,6 +69,9 @@ public:
 
 protected:
 	UPROPERTY()
+	UDataTable* PlayerDataTable;
+
+	UPROPERTY()
 	UPlayerAnimInstance* AnimInstance;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -57,6 +92,8 @@ protected:
 	UAnimMontage* AttackMontage;
 
 public: //Getters and setters
+	UPlayerWeaponComponent* GetWeaponComponent();
+
 	USpringArmComponent* GetSpringArm() 
 	{
 		return SpringArm; 
@@ -71,7 +108,6 @@ public: //Getters and setters
 		AttackMontage = Montage; 
 	}
 
-	UPlayerWeaponComponent* GetWeaponComponent();
 	UDataTable* GetWeaponData() 
 	{
 		return WeaponDT; 
@@ -85,23 +121,27 @@ public: //Getters and setters
 		return WeaponBoneName;
 	}
 
-public: //Core methods
-	void ResetSpringArm();
+protected: //Core methods
+	void InitializeFromDataTable(const FName& RowName);
+private:
+	EHitDirection CalculateHitDirection(AActor* DamageCauser);
 
+	void OnMouseLeftClick();
+public:
 	void Equip();
 	virtual void UnEquip();
-
 	void PlayUnEquipMontage(UAnimMontage* Montage);
 
-	void FollowingCurrentPlayer();
+	void FollowCurrentPlayer();
 	void ClearFollowTimer();
 
 	void MoveInCombat(FVector Location);
+
 	bool CanAttack();
 
 	void PlayAction();
 
-	void MouseClickLeft();
+	void ResetSpringArm();
 
 	void PossessAIController();
 };

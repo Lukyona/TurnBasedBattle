@@ -20,7 +20,6 @@ void AEnemyController::BeginPlay()
     Super::BeginPlay();
 
     AEnemy* enemy = Cast<AEnemy>(GetPawn());
-    SetGenericTeamId(FGenericTeamId(enemy->GetTeamID()));
 
     if (!enemy->GetBehaviorTree()) return;
 

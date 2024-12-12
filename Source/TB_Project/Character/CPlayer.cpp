@@ -12,7 +12,6 @@
 #include "Components/StateComponent.h"
 #include "Components/TurnComponent.h"
 #include "Components/HealthComponent.h"
-#include "Components/PlayerWeaponComponent.h"
 #include "Components/FeetComponent.h"
 #include "Character/Enemy.h"
 #include "Character/PlayerAnimInstance.h"
@@ -21,6 +20,8 @@
 
 ACPlayer::ACPlayer()
 {
+    CHelpers::GetAsset<UDataTable>(&PlayerDataTable, "DataTable'/Game/DataTables/PlayerStats.PlayerStats'");
+
     CHelpers::CreateActorComponent<UPlayerWeaponComponent>(this, &WeaponComponent, "WeaponComponent");
     CHelpers::CreateActorComponent<UFeetComponent>(this, &FeetComponent, "FeetComponent");
 
@@ -36,7 +37,31 @@ ACPlayer::ACPlayer()
     Capsule->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
     Tags.Add("Player");
-    
+}
+
+void ACPlayer::InitializeFromDataTable(const FName& RowName)
+{
+    if (!PlayerDataTable)
+    {
+        return;
+    }
+
+    FPlayerStats* Row = PlayerDataTable->FindRow<FPlayerStats>(RowName, "");
+    if (Row)
+    {
+        SetMeshAndAnim(Row->MeshPath, Row->AnimBlueprintPath);
+
+        MovementComponent->SetWalkSpeed(Row->WalkSpeed);
+        MovementComponent->SetRunSpeed(Row->RunSpeed);
+
+        TurnComponent->SetOriginMoveingAbility(Row->MovingAbility);
+        TurnComponent->SetOriginActionAbility(Row->ActionAbility);
+
+        HealthComponent->SetHealth(Row->MaxHealth);
+        HealthComponent->SetMaxHealth(Row->MaxHealth);
+
+        WeaponBoneName = Row->WeaponBoneName;
+    }
 }
 
 void ACPlayer::BeginPlay()
@@ -70,7 +95,27 @@ void ACPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
     PlayerInputComponent->BindAction("Run", EInputEvent::IE_Pressed, MovementComponent, &UMyMovementComponent::SetRunMode);
     PlayerInputComponent->BindAction("Run", EInputEvent::IE_Released, MovementComponent, &UMyMovementComponent::SetWalkMode);
 
-    PlayerInputComponent->BindAction("MouseLeftClick", EInputEvent::IE_Pressed, this, &ACPlayer::MouseClickLeft);
+    PlayerInputComponent->BindAction("MouseLeftClick", EInputEvent::IE_Pressed, this, &ACPlayer::OnMouseLeftClick);
+}
+
+UPlayerWeaponComponent* ACPlayer::GetWeaponComponent()
+{
+    return CHelpers::GetComponent<UPlayerWeaponComponent>(this);
+}
+
+void ACPlayer::ResetSpringArm()
+{
+    SpringArm->SetRelativeLocation(FVector(0, 0, 140));
+}
+
+void ACPlayer::NotifyActorBeginCursorOver()
+{
+    MAINPC->SpawnTargetCharacterCircle(this);
+}
+
+void ACPlayer::NotifyActorEndCursorOver()
+{
+    MAINPC->DestroyTargetCharacterCircle();
 }
 
 float ACPlayer::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -83,58 +128,52 @@ float ACPlayer::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
     Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
     // 공격당한 방향에 따라 다른 몽타주 재생
-    {
-        FVector EyeLoc;
-        FRotator EyeRot;
-        GetActorEyesViewPoint(EyeLoc, EyeRot);
+    WeaponComponent->GetHit(CalculateHitDirection(DamageCauser));
 
-        // 플레이어 기준 공격자의 방향
-        FVector RelativeLocation = (DamageCauser->GetActorLocation() - EyeLoc).GetSafeNormal();
-
-        //플레이어의 정면 벡터, 우측 벡터 구하기
-        FVector ForwardVec = UKismetMathLibrary::GetForwardVector(EyeRot).GetSafeNormal();
-        FVector RightVec = UKismetMathLibrary::GetRightVector(EyeRot).GetSafeNormal();
-
-        // Dot Product(내적) 결과, 1: 벡터가 완전히 같은 방향, 0: 벡터가 서로 수직, -1: 벡터가 완전히 반대 방향.
-        float ForwardDot = FVector::DotProduct(RelativeLocation, ForwardVec); // 플레이어 정면 기준으로 얼마나 떨어져있는지
-        float RightDot = FVector::DotProduct(RelativeLocation, RightVec); // 플레이어 우측 기준으로 얼마나 떨어져있는지
-
-        // Atan2(Y,X), X축(정면) 기준으로 얼마나 회전했는지, 양수 : 시계방향, 오른쪽, 음수 : 시계 반대 방향, 왼쪽
-        float Result = UKismetMathLibrary::DegAtan2(RightDot, ForwardDot);
-        // -180도 ~ 180도
-        if (Result > -45.f && Result < 45.f)
-        {
-            UKismetSystemLibrary::PrintString(this, TEXT("Front Attack"), true, true, FLinearColor::Green, 2.0f);
-            WeaponComponent->GetHit(EHitDirection::Front);
-        }
-        else if (Result >= 45.f && Result <= 135.f)
-        {
-            UKismetSystemLibrary::PrintString(this, TEXT("Right Attack"), true, true, FLinearColor::Green, 2.0f);
-
-            WeaponComponent->GetHit(EHitDirection::Right);
-        }
-        else if (Result > 135.f || Result < -135.f)
-        {
-            UKismetSystemLibrary::PrintString(this, TEXT("Back Attack"), true, true, FLinearColor::Green, 2.0f);
-
-            WeaponComponent->GetHit(EHitDirection::Back);
-        }
-        else if (Result <= -45.f && Result >= -135.f)
-        {
-            UKismetSystemLibrary::PrintString(this, TEXT("Left Attack"), true, true, FLinearColor::Green, 2.0f);
-
-            WeaponComponent->GetHit(EHitDirection::Left);
-        }
-    }
     return 0.0f;
 }
 
-void ACPlayer::FollowingCurrentPlayer()
+EHitDirection ACPlayer::CalculateHitDirection(AActor* DamageCauser)
+{
+    FVector EyeLoc;
+    FRotator EyeRot;
+    GetActorEyesViewPoint(EyeLoc, EyeRot);
+
+    // 플레이어 기준 공격자의 방향
+    FVector RelativeLocation = (DamageCauser->GetActorLocation() - EyeLoc).GetSafeNormal();
+
+    //플레이어의 정면 벡터, 우측 벡터 구하기
+    FVector ForwardVec = UKismetMathLibrary::GetForwardVector(EyeRot).GetSafeNormal();
+    FVector RightVec = UKismetMathLibrary::GetRightVector(EyeRot).GetSafeNormal();
+
+    // Dot Product(내적) 결과, 1: 벡터가 완전히 같은 방향, 0: 벡터가 서로 수직, -1: 벡터가 완전히 반대 방향.
+    // 플레이어 정면/우측 기준으로 얼마나 떨어져있는지
+    float ForwardDot = FVector::DotProduct(RelativeLocation, ForwardVec);
+    float RightDot = FVector::DotProduct(RelativeLocation, RightVec);
+
+    // Atan2(Y,X), X축(정면) 기준으로 얼마나 회전했는지, 양수 : 시계방향, 오른쪽, 음수 : 시계 반대 방향, 왼쪽
+    float Angle = UKismetMathLibrary::DegAtan2(RightDot, ForwardDot);
+    // -180도 ~ 180도
+    if (Angle > -45.f && Angle < 45.f) 
+    {
+        return EHitDirection::Front;
+    }
+    if (Angle >= 45.f && Angle <= 135.f) 
+    {
+        return EHitDirection::Right;
+    }
+    if (Angle > 135.f || Angle < -135.f) 
+    {
+        return EHitDirection::Back;
+    }
+    return EHitDirection::Left;
+}
+
+void ACPlayer::FollowCurrentPlayer()
 {
     if (MAINPC == nullptr)
     {
-        FTimerHandle TimerHandle;
-        GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ACPlayer::FollowingCurrentPlayer, 0.5f, false);
+        GetWorld()->GetTimerManager().SetTimer(FollowTimerHandle, this, &ACPlayer::FollowCurrentPlayer, 0.5f, false);
         return;
     }
 
@@ -160,7 +199,7 @@ void ACPlayer::FollowingCurrentPlayer()
 
         if (!GetWorld()->GetTimerManager().IsTimerActive(FollowTimerHandle))
         {
-            GetWorld()->GetTimerManager().SetTimer(FollowTimerHandle, this, &ACPlayer::FollowingCurrentPlayer, 1.5f, true);
+            GetWorld()->GetTimerManager().SetTimer(FollowTimerHandle, this, &ACPlayer::FollowCurrentPlayer, 1.5f, true);
         }
     }
 }
@@ -168,16 +207,6 @@ void ACPlayer::FollowingCurrentPlayer()
 void ACPlayer::ClearFollowTimer()
 {
     GetWorld()->GetTimerManager().ClearTimer(FollowTimerHandle);
-}
-
-void ACPlayer::NotifyActorBeginCursorOver()
-{
-    MAINPC->SpawnTargetCharacterCircle(this);
-}
-
-void ACPlayer::NotifyActorEndCursorOver()
-{
-    MAINPC->DestroyTargetCharacterCircle();
 }
 
 void ACPlayer::Attack()
@@ -210,11 +239,6 @@ void ACPlayer::EndAttack()
     MAINPC->SetFixedCamera(false);
 }
 
-void ACPlayer::ResetSpringArm()
-{
-    SpringArm->SetRelativeLocation(FVector(0, 0, 140));
-}
-
 void ACPlayer::MoveInCombat(FVector Location)
 {
     StateComponent->SetMovingMode();
@@ -226,23 +250,17 @@ void ACPlayer::MoveInCombat(FVector Location)
 
 bool ACPlayer::CanAttack()
 {
-    float attckDist = WeaponComponent->GetEquippedWeapon()->GetMinAttackDistance();
-    if (GetDistanceTo(CombatTarget) >= attckDist) // 타겟이 무기의 공격 유효 거리 내에 있지 않을 때 
+    float AttckDist = WeaponComponent->GetEquippedWeapon()->GetMinAttackDistance();
+    if (GetDistanceTo(CombatTarget) >= AttckDist) // 타겟이 무기의 공격 유효 거리 내에 있지 않을 때 
     {
         if (StateComponent->IsPrepareMode())
         {
             MAINPC->GetCombatUI()->ShowMessage(EMessage::TooFarToAttack);
         }
-    }
-    else
-    {
-        if (TurnComponent->CanAttack() && StateComponent->IsPrepareMode()) 
-        {
-            return true;
-        }
+        return false;
     }
 
-    return false;
+    return TurnComponent->CanAttack() && StateComponent->IsPrepareMode();
 }
 
 void ACPlayer::PlayAction()
@@ -257,14 +275,14 @@ void ACPlayer::PlayAction()
     }
 }
 
-void ACPlayer::MouseClickLeft()
+void ACPlayer::OnMouseLeftClick()
 {
     if (!MAINPC) 
     {
         return;
     }
 
-    MAINPC->MouseLeftClick();
+    MAINPC->OnMouseLeftClick();
 }
 
 void ACPlayer::Equip()
@@ -293,7 +311,6 @@ void ACPlayer::UnEquip()
     }
 
     WeaponComponent->SetUnArmedMode();
-
     MovementComponent->SetMove(true);
 
     MAINPC->StartFollowingPlayer();
@@ -303,11 +320,6 @@ void ACPlayer::PlayUnEquipMontage(UAnimMontage* Montage)
 {
     AnimInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
     AnimInstance->Montage_Play(Montage, -1.f, EMontagePlayReturnType::MontageLength, Montage->GetSectionLength(0), true);
-}
-
-UPlayerWeaponComponent* ACPlayer::GetWeaponComponent()
-{
-    return CHelpers::GetComponent<UPlayerWeaponComponent>(this);
 }
 
 void ACPlayer::PossessAIController()

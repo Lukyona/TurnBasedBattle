@@ -9,36 +9,20 @@
 #include "Components/HealthComponent.h"
 #include "Components/PlayerWeaponComponent.h"
 
+static const FName AuroraKey(TEXT("Aurora"));
+
 ACPlayer_Aurora::ACPlayer_Aurora()
 {
-    USkeletalMesh* mesh;
-    CHelpers::GetAsset<USkeletalMesh>(&mesh, "SkeletalMesh'/Game/Characters/Aurora/Meshes/Aurora_FrozenHearth.Aurora_FrozenHearth'");
-    GetMesh()->SetSkeletalMesh(mesh);
-
-    GetMesh()->SetRelativeLocation(FVector(5, 0, -92));
-
-    TSubclassOf<UPlayerAnimInstance> animInstance;
-    CHelpers::GetClass<UPlayerAnimInstance>(&animInstance, "AnimBlueprint'/Game/Characters/Aurora/ABP_Aurora.ABP_Aurora_C'");
-    GetMesh()->SetAnimClass(animInstance);
-
-    WeaponBoneName = "weapon";
-
-    GetCapsuleComponent()->SetCapsuleHalfHeight(87.f);
-    GetCapsuleComponent()->SetCapsuleRadius(32.f);
-
-    MovementComponent->SetWalkSpeed(350.f);
-    MovementComponent->SetRunSpeed(650.f);
-
-    TurnComponent->SetOriginMoveingAbility(1200.f);
-    TurnComponent->SetOriginActionAbility(2);
-
-    HealthComponent->SetHealth(28);
-    HealthComponent->SetMaxHealth(28);
+    InitializeFromDataTable(AuroraKey);
+    SetTransform(FVector(5, 0, -92));
+    SetCapsuleSize(87.f, 32.f);
 }
 
 void ACPlayer_Aurora::BeginPlay()
 {
     Super::BeginPlay();
-
-    WeaponComponent->SetCurrentWeapon(EWeaponType::Sword);
+    if (WeaponComponent)
+    {
+        WeaponComponent->SetCurrentWeapon(EWeaponType::Sword);
+    }
 }

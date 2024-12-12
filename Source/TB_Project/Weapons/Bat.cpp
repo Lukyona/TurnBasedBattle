@@ -13,5 +13,4 @@ ABat::ABat()
     Capsule->SetRelativeLocation(FVector(0, 0, 43));
     Capsule->SetCapsuleHalfHeight(28.f);
     Capsule->SetCapsuleRadius(12.f);
-
 }

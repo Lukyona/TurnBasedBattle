@@ -15,9 +15,7 @@ class TB_PROJECT_API ACPlayer_Sparrow : public ACPlayer
 	GENERATED_BODY()
 
 	ACPlayer_Sparrow();
-
-protected:
-	virtual void BeginPlay() override;
-	virtual void UnEquip() override;
+	void BeginPlay() override;
+	void UnEquip() override;
 
 };

@@ -6,13 +6,15 @@
 #include "Global.h"
 #include "Character/Enemy.h"
 
-
 void UEnemyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
-    AEnemy* enemy = Cast<AEnemy>(TryGetPawnOwner());
+    AEnemy* Enemy = Cast<AEnemy>(TryGetPawnOwner());
 
-    if (!enemy) return;
+    if (!Enemy) 
+    {
+        return;
+    }
 
-    Speed = enemy->GetCharacterMovement()->GetMaxSpeed();
-    Direction = CalculateDirection(enemy->GetVelocity(), enemy->GetControlRotation());
+    Speed = Enemy->GetCharacterMovement()->GetMaxSpeed();
+    Direction = CalculateDirection(Enemy->GetVelocity(), Enemy->GetControlRotation());
 }
