@@ -1,13 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Components/PlayerWeaponComponent.h"
 #include "Engine/DataTable.h"
+
 #include "Global.h"
 #include "Structs/PlayerWeaponData.h"
 #include "Character/CPlayer.h"
 #include "Weapons/PlayerWeapon.h"
-
 
 UPlayerWeaponComponent::UPlayerWeaponComponent()
 {
@@ -21,7 +20,10 @@ void UPlayerWeaponComponent::BeginPlay()
 
 void UPlayerWeaponComponent::SetMode(EWeaponType NewType)
 {
-	if (!CurrentWeapon) return;
+	if (!CurrentWeapon) 
+	{
+		return;
+	}
 
 	if (NewType == EWeaponType::UnArmed)
 	{
@@ -29,7 +31,7 @@ void UPlayerWeaponComponent::SetMode(EWeaponType NewType)
 		return;
 	}
 
-	if (EquippedWeapon)
+	if (EquippedWeapon) // 기존에 장비 중인 무기가 있었다면
 	{
 		EquippedWeapon->UnEquip();
 		EquippedWeapon->SetActorHiddenInGame(true);
@@ -39,10 +41,10 @@ void UPlayerWeaponComponent::SetMode(EWeaponType NewType)
 	EquippedWeapon->Equip();
 	ChangeWeaponType(NewType);
 
-	if (!MAINPC) return;
-
-	if (GetOwner() == MAINPC->GetPawn())
+	if (MAINPC && GetOwner() == MAINPC->GetPawn())
+	{
 		SetSkillIcons();
+	}
 }
 
 void UPlayerWeaponComponent::ChangeWeaponType(EWeaponType NewType)
@@ -50,15 +52,19 @@ void UPlayerWeaponComponent::ChangeWeaponType(EWeaponType NewType)
 	Type = NewType;
 
 	if (OnWeaponTypeChanged.IsBound())
+	{
 		OnWeaponTypeChanged.Broadcast(NewType);
+	}
 }
 
 void UPlayerWeaponComponent::SetUnArmedMode()
 {
-	if (IsUnArmedMode()) return;
+	if (IsUnArmedMode()) 
+	{
+		return;
+	}
 
 	EquippedWeapon = nullptr;
-
 	ChangeWeaponType(EWeaponType::UnArmed);
 }
 
@@ -91,93 +97,103 @@ void UPlayerWeaponComponent::SetCurrentWeapon(EWeaponType NewType)
 {
 	CurWeaponType = NewType;
 
-	if (!OwnerPlayer) return;
-
-	TArray<FPlayerWeaponData*> datas;
-	OwnerPlayer->GetWeaponData()->GetAllRows<FPlayerWeaponData>("", datas);
-	TSubclassOf<APlayerWeapon> weaponClass = WeaponClasses[(int32)NewType];
-
-	AActor* weapon = UGameplayStatics::GetActorOfClass(GetWorld(), weaponClass);
-	if (weapon)
+	if (!OwnerPlayer) 
 	{
-		CurrentWeapon = Cast<APlayerWeapon>(weapon);
+		return;
+	}
+
+	TArray<FPlayerWeaponData*> Datas;
+	OwnerPlayer->GetWeaponData()->GetAllRows<FPlayerWeaponData>("", Datas);
+	TSubclassOf<APlayerWeapon> NewWeaponClass = WeaponClasses[(int32)NewType];
+
+	AActor* Weapon = UGameplayStatics::GetActorOfClass(GetWorld(), NewWeaponClass);
+	if (Weapon)
+	{
+		CurrentWeapon = Cast<APlayerWeapon>(Weapon);
 	}
 	else
 	{
-		FTransform transform;
-		for (FPlayerWeaponData* data : datas)
-		{
-			// Enum -> FString 변환
-			UEnum* enumType = FindObject<UEnum>(ANY_PACKAGE, TEXT("EWeaponType"), true);
-			FString typeString = enumType->GetNameStringByValue(static_cast<int64>(NewType));
-
-			if (typeString != data->WeaponName) continue;
-
-			FActorSpawnParameters params;
-			params.Owner = GetOwner();
-			CurrentWeapon = GetWorld()->SpawnActor<APlayerWeapon>(weaponClass, transform, params);
-			CurrentWeapon->SetDatas(data->EquipMontage, data->UnEquipMontage, data->HitMontages, data->SkillInfoDT, data->SkillAnimDT);
-			CurrentWeapon->SetActorHiddenInGame(true);
-		}
+		SpawnWeapon(Datas, NewWeaponClass, NewType);
 	}
 	
-	if (!MAINPC) return;
-
-	if (GetOwner() == MAINPC->GetPawn())
+	if (MAINPC && GetOwner() == MAINPC->GetPawn())
+	{
 		SetSkillIcons();
+	}
+}
+
+void UPlayerWeaponComponent::SpawnWeapon(TArray<FPlayerWeaponData*> WeaponData, TSubclassOf<APlayerWeapon> WeaponClass, EWeaponType NewWeaponType)
+{
+	FTransform Transform;
+	for (FPlayerWeaponData* Data : WeaponData)
+	{
+		// Enum -> FString 변환
+		UEnum* EnumType = FindObject<UEnum>(ANY_PACKAGE, TEXT("EWeaponType"), true);
+		FString TypeString = EnumType->GetNameStringByValue(static_cast<int64>(NewWeaponType));
+
+		if (TypeString != Data->WeaponName)
+		{
+			continue;
+		}
+
+		FActorSpawnParameters Params;
+		Params.Owner = GetOwner();
+		CurrentWeapon = GetWorld()->SpawnActor<APlayerWeapon>(WeaponClass, Transform, Params);
+		CurrentWeapon->SetDatas(Data->EquipMontage, Data->UnEquipMontage, Data->HitMontages, Data->SkillInfoDT, Data->SkillAnimDT);
+		CurrentWeapon->SetActorHiddenInGame(true);
+	}
 }
 
 void UPlayerWeaponComponent::SetSkillIcons()
 {
-	if (!MAINPC) return;
-
-	MAINPC->SetSkills(CurrentWeapon->GetSkillInfoDT());
+	if (MAINPC) 
+	{
+		MAINPC->SetSkills(CurrentWeapon->GetSkillInfoDT());
+	}
 }
 
 void UPlayerWeaponComponent::SpawnProjectile()
 {
-	if (!EquippedWeapon) return;
-
-	EquippedWeapon->SpawnProjectile();
+	if (EquippedWeapon) 
+	{
+		EquippedWeapon->SpawnProjectile();
+	}
 }
 
 void UPlayerWeaponComponent::MoveProjectile()
 {
-	if (!EquippedWeapon) return;
-
-	EquippedWeapon->Shoot();
+	if (EquippedWeapon) 
+	{
+		EquippedWeapon->Shoot();
+	}
 }
 
 void UPlayerWeaponComponent::SpawnMagic(EMagicType MagicType)
 {
-	if (!EquippedWeapon) return;
-
-	EquippedWeapon->SpawnMagic(MagicType);
+	if (EquippedWeapon) 
+	{
+		EquippedWeapon->SpawnMagic(MagicType);
+	}
 }
 
 void UPlayerWeaponComponent::UnEquip()
 {
-	if (!EquippedWeapon) return;
-	EquippedWeapon->UnEquip();
+	if (EquippedWeapon) 
+	{
+		EquippedWeapon->UnEquip();
+	}
 }
 
-void UPlayerWeaponComponent::GetHit(EHitDirection dir)
+void UPlayerWeaponComponent::GetHit(EHitDirection Direction)
 {
-	if (!OwnerPlayer) return;
-
-	switch (dir)
+	if (!OwnerPlayer || !EquippedWeapon)
 	{
-	case EHitDirection::Front:
-		OwnerPlayer->PlayAnimMontage(GetEquippedWeapon()->GetHitMontage(0));
-		break;
-	case EHitDirection::Right:
-		OwnerPlayer->PlayAnimMontage(GetEquippedWeapon()->GetHitMontage(1));
-		break;
-	case EHitDirection::Back:
-		OwnerPlayer->PlayAnimMontage(GetEquippedWeapon()->GetHitMontage(2));
-		break;
-	case EHitDirection::Left:
-		OwnerPlayer->PlayAnimMontage(GetEquippedWeapon()->GetHitMontage(3));
-		break;
+		return;
+	}
+
+	int32 Index = static_cast<int32>(Direction);
+	if (Index >= 0)
+	{
+		OwnerPlayer->PlayAnimMontage(EquippedWeapon->GetHitMontage(Index));
 	}
 }

@@ -7,6 +7,9 @@
 #include "Weapons/Magic.h"
 #include "PlayerWeaponComponent.generated.h"
 
+class APlayerWeapon;
+class ACPlayer;
+
 UENUM(BlueprintType)
 enum class EWeaponType : uint8
 {
@@ -27,32 +30,43 @@ class TB_PROJECT_API UPlayerWeaponComponent : public UActorComponent
 
 public:	
 	UPlayerWeaponComponent();
+protected:
+	virtual void BeginPlay() override;
 
 private:
 	EWeaponType Type = EWeaponType::UnArmed;
 	EWeaponType CurWeaponType = EWeaponType::UnArmed;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
-	class APlayerWeapon* CurrentWeapon;
-
+	APlayerWeapon* CurrentWeapon;
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
-	class APlayerWeapon* EquippedWeapon;
+	APlayerWeapon* EquippedWeapon;
 
-	class ACPlayer* OwnerPlayer;
+	ACPlayer* OwnerPlayer;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
 	TArray<TSubclassOf<APlayerWeapon>> WeaponClasses;
 
-	virtual void BeginPlay() override;
+public:// Getters and setters
+	bool IsUnArmedMode()
+	{
+		return Type == EWeaponType::UnArmed;
+	}
+	bool IsMagicMode()
+	{
+		return Type == EWeaponType::Magic;
+	}
 
-public:
-	FWeaponTypeChanged OnWeaponTypeChanged;
+	EWeaponType GetCurrentWeaponType()
+	{
+		return CurWeaponType;
+	}
 
-    UFUNCTION(BlueprintCallable)
-	void SetMode(EWeaponType NewType);
-
-	void ChangeWeaponType(EWeaponType NewType);
+	APlayerWeapon* GetEquippedWeapon()
+	{
+		return EquippedWeapon;
+	}
 
 	void SetUnArmedMode();
 	void SetFistMode();
@@ -61,13 +75,13 @@ public:
 	void SetBowMode();
 	void SetMagicMode();
 
-	bool IsUnArmedMode() { return Type == EWeaponType::UnArmed ? true : false; }
-	bool IsMagicMode() { return Type == EWeaponType::Magic ? true : false; }
+	//Core methods
+    UFUNCTION(BlueprintCallable)
+	void SetMode(EWeaponType NewType);
+
+	void ChangeWeaponType(EWeaponType NewType);
 
 	void SetCurrentWeapon(EWeaponType NewType);
-	EWeaponType GetCurrentWeaponType() { return CurWeaponType; }
-
-	class APlayerWeapon* GetEquippedWeapon() { return EquippedWeapon; }
 
 	void SetSkillIcons();
 
@@ -76,7 +90,12 @@ public:
 
 	void SpawnMagic(EMagicType MagicType);
 
+	void SpawnWeapon(TArray<FPlayerWeaponData*> WeaponData, TSubclassOf<APlayerWeapon> WeaponClass, EWeaponType NewWeaponType);
+
 	void UnEquip();
 
-	void GetHit(EHitDirection dir);
+	void GetHit(EHitDirection Direction);
+
+	FWeaponTypeChanged OnWeaponTypeChanged;
+
 };

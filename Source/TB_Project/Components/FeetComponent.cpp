@@ -34,12 +34,18 @@ void UFeetComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Trace(LeftSocketName, LeftOffset, LeftRotator, LeftHitLoc);
 	Trace(RightSocketName, RightOffset, RightRotator, RightHitLoc);
 
+	// 양 발 사이의 높이 차 계산 (Z 축 기준)
 	float Z_Value = UKismetMathLibrary::Abs((RightHitLoc - LeftHitLoc).Z);
+	// 높이 차이가 크면 허리가 내려가고(-0.5f로 음수 값) 높이 차이가 작으면 허리가 유지됩니다.
+	// Z_Value가 임계값(HipOffsetThreshold) 이상일 경우, 높이 차의 절반(-0.5f)을 기반으로 허리 위치를 아래로 내려 균형을 유지.
+	// 임계값보다 낮을 경우(즉, 거의 평지일 경우) 허리 위치는 보정하지 않고 그대로 유지 (값은 0).
 	Data.IKHipOffset = UKismetMathLibrary::SelectFloat(Z_Value * -0.5f, 0, Z_Value < HipOffsetThreshold);
 
+	//발 위치 선형보간
 	Data.LeftEffector.X = UKismetMathLibrary::FInterpTo(Data.LeftEffector.X, (LeftOffset - Data.IKHipOffset), DeltaTime, InterpSpeed);
 	Data.RightEffector.X = UKismetMathLibrary::FInterpTo(Data.RightEffector.X, -1.f * (RightOffset - Data.IKHipOffset), DeltaTime, InterpSpeed);
 
+	//발 회전보간
 	Data.LeftRotation = UKismetMathLibrary::RInterpTo(Data.LeftRotation, LeftRotator, DeltaTime, InterpSpeed);
 	Data.RightRotation = UKismetMathLibrary::RInterpTo(Data.RightRotation, RightRotator, DeltaTime, InterpSpeed);
 }
@@ -72,8 +78,8 @@ void UFeetComponent::Trace(FName InName, float& OutFootOffset, FRotator& OutRota
 	{
 		return;
 	}
-	    
-	OutFootOffset = (HitResult.Location - OwnerCharacter->GetMesh()->GetComponentLocation()).Z;
+																							// OffsetDistance를 더해 발의 일부가 파묻히는 걸 방지
+	OutFootOffset = (HitResult.Location - OwnerCharacter->GetMesh()->GetComponentLocation()).Z + OffsetDistance;
 
 	float roll = UKismetMathLibrary::DegAtan2(HitResult.Normal.Y, HitResult.Normal.Z); // rad->deg 각도 변환
 	float pitch = UKismetMathLibrary::DegAtan2(HitResult.Normal.X, HitResult.Normal.Z) * -1.f; // 발이 들려있을 때 pitch가 -여야 발이 내려갈 수 있음

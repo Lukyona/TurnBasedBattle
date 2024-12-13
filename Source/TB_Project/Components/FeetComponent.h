@@ -12,15 +12,15 @@ struct FFeetData
 	GENERATED_BODY()
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		FVector LeftEffector;
+	FVector LeftEffector;
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		FVector RightEffector;
+	FVector RightEffector;
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		FRotator LeftRotation;
+	FRotator LeftRotation;
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		FRotator RightRotation;
+	FRotator RightRotation;
 	UPROPERTY(BlueprintReadOnly, Category = "Feet")
-		float IKHipOffset;
+	float IKHipOffset;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -38,20 +38,11 @@ private:
 
 	class ACharacter* OwnerCharacter;
 
-	UPROPERTY(EditAnywhere, Category = "Trace")
-		float InterpSpeed = 50.f;
-
-	UPROPERTY(EditAnywhere, Category = "Trace")
-		float TraceDistance = 200.f;
-
-	UPROPERTY(EditAnywhere, Category = "Trace")
-		float OffsetDistance = 5.f;
-
-	UPROPERTY(EditAnywhere, Category = "Trace")
-		FName LeftSocketName = "Foot_L_Socket";
-
-	UPROPERTY(EditAnywhere, Category = "Trace")
-		FName RightSocketName = "Foot_R_Socket";
+	float InterpSpeed = 50.f;
+	float TraceDistance = 200.f;
+	float OffsetDistance = 5.f;
+	FName LeftSocketName = "Foot_L_Socket";
+	FName RightSocketName = "Foot_R_Socket";
 
 public:
 	FORCEINLINE FFeetData GetData()

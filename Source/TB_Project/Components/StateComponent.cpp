@@ -1,12 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Components/StateComponent.h"
 
 UStateComponent::UStateComponent()
 {
-	
-
 }
 
 void UStateComponent::ChangeStateType(EStateType NewType)
@@ -48,4 +45,3 @@ void UStateComponent::SetPrepareMode()
 {
 	ChangeStateType(EStateType::Prepare);
 }
-

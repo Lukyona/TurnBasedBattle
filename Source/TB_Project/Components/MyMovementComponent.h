@@ -6,15 +6,22 @@
 #include "Components/ActorComponent.h"
 #include "MyMovementComponent.generated.h"
 
+class ACharacter;
+class ACPlayer;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TB_PROJECT_API UMyMovementComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
+public:
+	UMyMovementComponent();
+	virtual void BeginPlay() override;
+
 private:
 	bool bMove = true;
 	bool bInterp;
+	bool bCanRotateCamera;
 
     UPROPERTY(VisibleAnywhere, Category = "Speed")
 	float WalkSpeed;
@@ -23,36 +30,57 @@ private:
 	float RunSpeed;
 
 	UPROPERTY(VisibleAnywhere)
-	class ACharacter* OwnerCharacter;
+	ACharacter* OwnerCharacter;
 	UPROPERTY(VisibleAnywhere)
-	class ACPlayer* PlayerCharacter;
+	ACPlayer* PlayerCharacter;
 
-	bool bCanRotateCamera;
+public: //Gettets and setters
+	bool CanMove() 
+	{
+		return bMove; 
+	}
+	void SetMove(bool Value) 
+	{
+		bMove = Value; 
+	}
 
-public:	
-	UMyMovementComponent();
-	virtual void BeginPlay() override;
+	bool CanInterp() 
+	{
+		return bInterp; 
+	}
+	void SetInterp(bool Value) 
+	{
+		bInterp = Value; 
+	}
 
-	bool CanMove() { return bMove; }
-	void SetMove(bool Value) { bMove = Value; }
+	void SetWalkSpeed(float Value) 
+	{
+		WalkSpeed = Value; 
+	}
+	void SetRunSpeed(float Value) 
+	{
+		RunSpeed = Value; 
+	}
 
-	bool CanInterp() { return bInterp; }
-	void SetInterp(bool Value) { bInterp = Value; }
-
-	void SetWalkSpeed(float Value) { WalkSpeed = Value; }
-	void SetRunSpeed(float Value) { RunSpeed = Value; }
-
+	//Core methods
 	void SetWalkMode();
 	void SetRunMode();
 	void SetStandMode();
 
 	void MoveForward(float Axis);
 	void MoveRight(float Axis);
+
 	void HorizontalLook(float Axis);
 	void VerticalLook(float Axis);
 
 	void Zoom(float Axis);
-	void OnRotateCamera();
-	void OffRotateCamera();
+	void OnRotateCamera()
+	{
+		bCanRotateCamera = true;
+	}
+	void OffRotateCamera()
+	{
+		bCanRotateCamera = false;
+	}
 
 };

@@ -10,8 +10,12 @@ UHealthComponent::UHealthComponent()
 
 void UHealthComponent::GetDamage(float Damage)
 {
-	if ((Health - (int)Damage) > 0)
-		Health -= (int)Damage;
+	if ((Health - (int32)Damage) > 0)
+	{
+		Health -= (int32)Damage;
+	}
 	else
+	{
 		Health = 0;
+	}
 }

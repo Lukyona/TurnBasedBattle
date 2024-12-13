@@ -12,10 +12,12 @@ class TB_PROJECT_API UTurnComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-private:
-	bool bMyTurn;
+public:
+	UTurnComponent();
 
-	int MyTurnNum;
+private:
+	bool bIsMyTurn;
+	int32 MyTurnNum;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
 	float OriginMovingAbility;
@@ -23,35 +25,63 @@ private:
 	float CurMovingAbility;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
-	int OriginActionAbility = 1;
+	int32 OriginActionAbility = 1;
 
-	int CurActionAbility;
+	int32 CurActionAbility;
 
-public:	
-	UTurnComponent();
+public:	//Getters and setters
+	bool IsMyTurn() 
+	{
+		return bIsMyTurn; 
+	}
 
+	int32 GetTurnNum() 
+	{
+		return MyTurnNum; 
+	}
+	void SetTurnNum(int32 TurnNum)
+	{
+		MyTurnNum = TurnNum;
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetOriginMovingAbility() 
+	{
+		return OriginMovingAbility; 
+	}
+	void SetOriginMoveingAbility(float Value) 
+	{
+		OriginMovingAbility = Value; 
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetCurMovingAbility() 
+	{
+		return CurMovingAbility; 
+	}
+
+	int32 GetOriginActionAbility() 
+	{
+		return OriginActionAbility; 
+	}
+	void SetOriginActionAbility(int32 Value) 
+	{
+		OriginActionAbility = Value; 
+	}
+
+	int32 GetCurActionAbility() 
+	{
+		return CurActionAbility;
+	}
+	void SetCurActionAbility(int32 Value)
+	{
+		CurActionAbility = Value;
+	}
+
+	//Core methods
 	void SetTurn(bool Turn);
-	bool IsMyTurn() { return bMyTurn; }
-
-	void SetTurnNum(int TurnNum);
-	int GetTurnNum() { return MyTurnNum; }
-
-	void SetOriginMoveingAbility(float Value) { OriginMovingAbility = Value; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	float GetOriginMovingAbility() { return OriginMovingAbility; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	float GetCurMovingAbility() { return CurMovingAbility; }
 	void UpdateCurMovingAbility(float MovedDist);
 
-	void SetOriginActionAbility(int Value) { OriginActionAbility = Value; }
-	int GetOriginActionAbility() { return OriginActionAbility; }
-
-	void SetCurActionAbility(int value);
-	int GetCurActionAbility() { return CurActionAbility; }
-
-	bool CanMove(float Distance);
-	bool CanAttack();
-
+	bool CanMove(float Distance) const;
+	bool CanAttack() const;
 };
