@@ -17,19 +17,29 @@ EBTNodeResult::Type UBTTaskNode_LookAt::ExecuteTask(UBehaviorTreeComponent& Owne
 {
     Super::ExecuteTask(OwnerComp, NodeMemory);
 
-    AEnemyController* controller = Cast<AEnemyController>(OwnerComp.GetOwner());
-    AEnemy* enemy = Cast<AEnemy>(controller->GetPawn());
-    UAIBehaviorComponent* behavior = CHelpers::GetComponent<UAIBehaviorComponent>(enemy);
+    AEnemyController* EnemyController;
+    AEnemy* Enemy;
+    UAIBehaviorComponent* BehaviorComp;
+    UMyMovementComponent* MovementComp;
 
-    controller->StopMovement();
+    bool bIsValid = BTHelper::ValidateAllEntities(OwnerComp, EnemyController, Enemy, &BehaviorComp, &MovementComp);
+    if (!bIsValid)
+    {
+        return EBTNodeResult::Failed;
+    }
 
-    ACharacter* target = MAINPC->FindNearestTarget(enemy);
-    behavior->SetTarget(target);
+    EnemyController->StopMovement();
 
-    enemy->SetCombatTarget(target);
+    //가장 가까운 상대를 찾아 타겟으로 지정
+    ACharacter* Target = MAINPC ? MAINPC->FindNearestTarget(Enemy) : nullptr;
+    if (!Target)
+    {
+        return EBTNodeResult::Failed;
+    }
 
-    CHelpers::GetComponent<UMyMovementComponent>(enemy)->SetInterp(true);
+    BehaviorComp->SetTarget(Target);
+    Enemy->SetCombatTarget(Target);
+    MovementComp->SetInterp(true);
 
     return EBTNodeResult::Succeeded;
 }
-

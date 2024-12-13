@@ -16,9 +16,17 @@ EBTNodeResult::Type UBTTaskNode_Stop::ExecuteTask(UBehaviorTreeComponent& OwnerC
 {
     Super::ExecuteTask(OwnerComp, NodeMemory);
 
-    AEnemyController* controller = Cast<AEnemyController>(OwnerComp.GetOwner());
-    AEnemy* enemy = Cast<AEnemy>(controller->GetPawn());
-    CHelpers::GetComponent<UMyMovementComponent>(enemy)->SetStandMode();
+    AEnemyController* EnemyController;
+    AEnemy* Enemy;
+    UMyMovementComponent* MovementComp;
+
+    bool bIsValid = BTHelper::ValidateAllEntities(OwnerComp, EnemyController, Enemy, nullptr, &MovementComp);
+    if (!bIsValid)
+    {
+        return EBTNodeResult::Failed;
+    }
+
+    MovementComp->SetStandMode();
 
     return EBTNodeResult::Succeeded;
 }

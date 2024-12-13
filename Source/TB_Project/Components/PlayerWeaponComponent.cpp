@@ -4,7 +4,6 @@
 #include "Engine/DataTable.h"
 
 #include "Global.h"
-#include "Structs/PlayerWeaponData.h"
 #include "Character/CPlayer.h"
 #include "Weapons/PlayerWeapon.h"
 

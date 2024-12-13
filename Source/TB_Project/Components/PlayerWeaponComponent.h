@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Structs/PlayerWeaponData.h"
 #include "Weapons/Magic.h"
 #include "PlayerWeaponComponent.generated.h"
 

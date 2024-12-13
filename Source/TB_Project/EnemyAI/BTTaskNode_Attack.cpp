@@ -15,10 +15,16 @@ EBTNodeResult::Type UBTTaskNode_Attack::ExecuteTask(UBehaviorTreeComponent& Owne
 {
     Super::ExecuteTask(OwnerComp, NodeMemory);
 
-    AEnemyController* controller = Cast<AEnemyController>(OwnerComp.GetOwner());
-    AEnemy* enemy = Cast<AEnemy>(controller->GetPawn());
+    AEnemyController* EnemyController;
+    AEnemy* Enemy;
 
-    enemy->Attack();
+    bool bIsValid = BTHelper::ValidateAllEntities(OwnerComp, EnemyController, Enemy);
+    if (!bIsValid)
+    {
+        return EBTNodeResult::Failed;
+    }
+
+    Enemy->Attack();
 
     return EBTNodeResult::Succeeded;
 }

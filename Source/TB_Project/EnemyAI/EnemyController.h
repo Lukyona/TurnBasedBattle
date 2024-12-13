@@ -9,6 +9,20 @@
 /**
  * 
  */
+class AEnemy;
+class UBehaviorTreeComponent;
+class UAIBehaviorComponent;
+class UMyMovementComponent;
+class UStateComponent;
+class UTurnComponent;
+
+namespace BTHelper
+{
+	bool ValidateAllEntities(UBehaviorTreeComponent& OwnerComp, AEnemyController*& OutEnemyController, AEnemy*& OutEnemy,
+		UAIBehaviorComponent** OutBehaviorComp = nullptr, UMyMovementComponent** OutMovementComp = nullptr,
+		UStateComponent** OutStateComp = nullptr, UTurnComponent** OutTurnComp = nullptr);
+}
+
 UCLASS()
 class TB_PROJECT_API AEnemyController : public AAIController
 {
@@ -17,8 +31,7 @@ class TB_PROJECT_API AEnemyController : public AAIController
 public:
 	AEnemyController();
 protected:
-	class UAIBehaviorComponent* Behavior;
-
 	virtual void BeginPlay() override;
 
+	class UAIBehaviorComponent* Behavior;
 };

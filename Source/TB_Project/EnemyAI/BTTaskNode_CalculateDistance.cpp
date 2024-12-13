@@ -18,26 +18,34 @@ EBTNodeResult::Type UBTTaskNode_CalculateDistance::ExecuteTask(UBehaviorTreeComp
 {
     Super::ExecuteTask(OwnerComp, NodeMemory);
 
-    AEnemyController* controller = Cast<AEnemyController>(OwnerComp.GetOwner());
-    AEnemy* enemy = Cast<AEnemy>(controller->GetPawn());
-    UAIBehaviorComponent* behavior = CHelpers::GetComponent<UAIBehaviorComponent>(enemy);
+    AEnemyController* EnemyController;
+    AEnemy* Enemy;
+    UAIBehaviorComponent* BehaviorComp;
 
-    ACharacter* target = behavior->GetTarget();
-    if(!target) return EBTNodeResult::Failed;
-
-    float attckDist = enemy->GetMinAttackDistance();
-    float dist = UKismetMathLibrary::Vector_Distance(target->GetActorLocation(), enemy->GetActorLocation());
-
-    if (dist < attckDist)
+    bool bIsValid = BTHelper::ValidateAllEntities(OwnerComp, EnemyController, Enemy, &BehaviorComp);
+    if (!bIsValid)
     {
-        behavior->SetCanAttack(true);
+        return EBTNodeResult::Failed;
+    }
+
+    ACharacter* Target = BehaviorComp->GetTarget();
+    if(!Target) 
+    {
+        return EBTNodeResult::Failed;
+    }
+
+    float AttckDistance = Enemy->GetMinAttackDistance();
+    float TargetDistance = UKismetMathLibrary::Vector_Distance(Target->GetActorLocation(), Enemy->GetActorLocation());
+
+    if (TargetDistance < AttckDistance)
+    {
+        BehaviorComp->SetCanAttack(true);
         return EBTNodeResult::Succeeded;
     }
 
-    float moveDist = CHelpers::GetComponent<UTurnComponent>(enemy)->GetOriginMovingAbility();
-    behavior->SetMoveDistance(moveDist);
-    behavior->SetCanAttack(false);
+    float AvailableMoveDistance = CHelpers::GetComponent<UTurnComponent>(Enemy)->GetOriginMovingAbility();
+    BehaviorComp->SetMoveDistance(AvailableMoveDistance);
+    BehaviorComp->SetCanAttack(false);
 
     return EBTNodeResult::Succeeded;
 }
-

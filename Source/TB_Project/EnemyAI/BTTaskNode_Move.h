@@ -9,16 +9,13 @@
 /**
  * 
  */
+
+class AEnemy;
+
 UCLASS()
 class TB_PROJECT_API UBTTaskNode_Move : public UBTTaskNode
 {
 	GENERATED_BODY()
-
-	float Radius = 500.f;
-
-	FVector LastLocation;
-	float StuckTime = 0.0f;
-
 
 public:
 	UBTTaskNode_Move();
@@ -26,5 +23,12 @@ public:
 protected:
 	EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+
+private:
+	float Radius = 500.f;
+	FVector LastLocation;
+	float StuckTime = 0.0f;
+
+	bool CheckStuckState(float DeltaSeconds, AEnemy* InEnemy);
 
 };

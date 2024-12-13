@@ -15,22 +15,33 @@ UBTTaskNode_EndTurn::UBTTaskNode_EndTurn()
     NodeName = "EndTurn";
 }
 
-
 EBTNodeResult::Type UBTTaskNode_EndTurn::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     Super::ExecuteTask(OwnerComp, NodeMemory);
 
-    AEnemyController* controller = Cast<AEnemyController>(OwnerComp.GetOwner());
-    AEnemy* enemy = Cast<AEnemy>(controller->GetPawn());
-    UAIBehaviorComponent* behavior = CHelpers::GetComponent<UAIBehaviorComponent>(enemy);
+    AEnemyController* EnemyController;
+    AEnemy* Enemy;
+    UAIBehaviorComponent* BehaviorComp;
+    UMyMovementComponent* MovementComp;
+    UStateComponent* StateComp;
+    UTurnComponent* TurnComp;
 
-    CHelpers::GetComponent<UMyMovementComponent>(enemy)->SetInterp(false);
-    CHelpers::GetComponent<UStateComponent>(enemy)->SetWaitMode();
-    int turnNum = CHelpers::GetComponent<UTurnComponent>(enemy)->GetTurnNum();
+    bool bIsValid = BTHelper::ValidateAllEntities(OwnerComp, EnemyController, Enemy, &BehaviorComp, &MovementComp, &StateComp, &TurnComp);
+    if (!bIsValid)
+    {
+        return EBTNodeResult::Failed;
+    }
 
-    MAINPC->StartTurn(turnNum);
+    MovementComp->SetInterp(false);
+    StateComp->SetWaitMode();
 
-    behavior->SetTurn(false);
+    int32 TurnNum = TurnComp->GetTurnNum();
+    if(MAINPC)
+    {
+        MAINPC->StartTurn(TurnNum);
+    }
+
+    BehaviorComp->SetTurn(false);
 
     return EBTNodeResult::Succeeded;
 }

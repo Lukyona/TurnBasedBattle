@@ -77,6 +77,10 @@ void AGameCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	FRotator Rot = GetActorRotation();
+	Rot.Pitch = 0.f;
+	SetActorRotation(Rot);
+
 	if (!CombatTarget || !MovementComponent || !MovementComponent->CanInterp())
 	{
 		return;

@@ -9,6 +9,7 @@
 /**
  * 
  */
+
 UCLASS()
 class TB_PROJECT_API UBTTaskNode_EndTurn : public UBTTaskNode
 {

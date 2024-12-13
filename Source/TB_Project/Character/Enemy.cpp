@@ -216,6 +216,11 @@ void AEnemy::OnAgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, 
 
 void AEnemy::Dead()
 {
+    UBehaviorTreeComponent* BTComponent = Cast<UBehaviorTreeComponent>(AIController->GetBrainComponent());
+    if (BTComponent)
+    {
+        BTComponent->StopTree(EBTStopMode::Forced); // 즉시 비헤이비어 트리 중지
+    }
     AgroSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     if (DeadMontage)
