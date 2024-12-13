@@ -11,11 +11,16 @@ FString UAN_Enemy_EndDead::GetNotifyName_Implementation() const
 
 void UAN_Enemy_EndDead::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::Notify(MeshComp, Animation);
 
-    AEnemy* enemy = Cast<AEnemy>(MeshComp->GetOwner());
-
-    if (enemy) enemy->EndDead();
+    AEnemy* Enemy = Cast<AEnemy>(MeshComp->GetOwner());
+    if (Enemy) 
+    {
+        Enemy->EndDead();
+    }
 }

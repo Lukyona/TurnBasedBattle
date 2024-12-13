@@ -11,11 +11,16 @@ FString UAN_EndAttack::GetNotifyName_Implementation() const
 
 void UAN_EndAttack::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::Notify(MeshComp, Animation);
 
-    AGameCharacter* character = Cast<AGameCharacter>(MeshComp->GetOwner());
-
-    if (character) character->EndAttack();
+    AGameCharacter* Character = Cast<AGameCharacter>(MeshComp->GetOwner());
+    if (Character) 
+    {
+        Character->EndAttack();
+    }
 }

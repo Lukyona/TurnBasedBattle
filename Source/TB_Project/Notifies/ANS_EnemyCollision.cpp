@@ -13,40 +13,58 @@ FString UANS_EnemyCollision::GetNotifyName_Implementation() const
 
 void UANS_EnemyCollision::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::NotifyBegin(MeshComp, Animation, TotalDuration);
     
-    AEnemy* enemy = Cast<AEnemy>(MeshComp->GetOwner());
-    if (enemy)
+    AEnemy* Enemy = Cast<AEnemy>(MeshComp->GetOwner());
+    if (Enemy)
     {
-        AEnemyWeapon* weapon = enemy->GetWeapon();
-        if (weapon) weapon->OnCollision();
+        AEnemyWeapon* Weapon = Enemy->GetWeapon();
+        if (Weapon) 
+        {
+            Weapon->OnCollision();
+        }
 
         if (bIsDoubleWeapon)
         {
-            weapon = enemy->GetSecondWeapon();
-            if (weapon) weapon->OnCollision();
+            Weapon = Enemy->GetSecondWeapon();
+            if (Weapon) 
+            {
+                Weapon->OnCollision();
+            }
         }
     }
 }
 
 void UANS_EnemyCollision::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::NotifyEnd(MeshComp, Animation);
 
-    AEnemy* enemy = Cast<AEnemy>(MeshComp->GetOwner());
-    if (enemy)
+    AEnemy* Enemy = Cast<AEnemy>(MeshComp->GetOwner());
+    if (Enemy)
     {
-        AEnemyWeapon* weapon = enemy->GetWeapon();
-        if (weapon) weapon->OffCollision();
+        AEnemyWeapon* Weapon = Enemy->GetWeapon();
+        if (Weapon) 
+        {
+            Weapon->OffCollision();
+        }
 
         if (bIsDoubleWeapon)
         {
-            weapon = enemy->GetSecondWeapon();
-            if (weapon) weapon->OffCollision();
+            Weapon = Enemy->GetSecondWeapon();
+            if (Weapon) 
+            {
+                Weapon->OffCollision();
+            }
         }
     }
 }

@@ -13,15 +13,21 @@ FString UAN_Player_SpawnProjectile::GetNotifyName_Implementation() const
 
 void UAN_Player_SpawnProjectile::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::Notify(MeshComp, Animation);
 
-    ACPlayer* player = Cast<ACPlayer>(MeshComp->GetOwner());
+    ACPlayer* Player = Cast<ACPlayer>(MeshComp->GetOwner());
 
-    if (player)
+    if (Player)
     {
-        UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(player);
-        if (weaponComp) weaponComp->SpawnProjectile();
+        UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(Player);
+        if (WeaponComp) 
+        {
+            WeaponComp->SpawnProjectile();
+        }
     }
 }

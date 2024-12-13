@@ -4,28 +4,30 @@
 #include "Engine/DataTable.h"
 #include "PlayerWeaponData.generated.h"
 
+class UAnimMontage;
+class UDataTable;
+
 USTRUCT()
 struct FPlayerWeaponData : public FTableRowBase
 {
-    //GENERATED_BODY()
     GENERATED_USTRUCT_BODY()
 
 public:
     UPROPERTY(EditAnywhere)
-        FString WeaponName;
+    FString WeaponName;
 
     UPROPERTY(EditAnywhere)
-        class UAnimMontage* EquipMontage;
+    UAnimMontage* EquipMontage;
 
     UPROPERTY(EditAnywhere)
-        class UAnimMontage* UnEquipMontage;
+    UAnimMontage* UnEquipMontage;
 
     UPROPERTY(EditAnywhere)
-        TArray<class UAnimMontage*> HitMontages;
+        TArray<UAnimMontage*> HitMontages;
 
     UPROPERTY(EditAnywhere)
-        class UDataTable* SkillInfoDT;
+    UDataTable* SkillInfoDT;
 
     UPROPERTY(EditAnywhere)
-        class UDataTable* SkillAnimDT;
+    UDataTable* SkillAnimDT;
 };

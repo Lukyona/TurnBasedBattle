@@ -11,12 +11,17 @@ FString UAN_Player_UnEquip::GetNotifyName_Implementation() const
 
 void UAN_Player_UnEquip::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::Notify(MeshComp, Animation);
 
-    ACPlayer* player = Cast<ACPlayer>(MeshComp->GetOwner());
+    ACPlayer* Player = Cast<ACPlayer>(MeshComp->GetOwner());
 
-    if (player) player->UnEquip();
+    if (Player) 
+    {
+        Player->UnEquip();
+    }
 }
-

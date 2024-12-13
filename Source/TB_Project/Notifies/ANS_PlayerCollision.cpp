@@ -14,36 +14,48 @@ FString UANS_PlayerCollision::GetNotifyName_Implementation() const
 
 void UANS_PlayerCollision::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::NotifyBegin(MeshComp, Animation, TotalDuration);
 
-    ACPlayer* player = Cast<ACPlayer>(MeshComp->GetOwner());
-    if (player)
+    ACPlayer* Player = Cast<ACPlayer>(MeshComp->GetOwner());
+    if (Player)
     {
-        UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(player);
-        if (weaponComp)
+        UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(Player);
+        if (WeaponComp)
         {
-            APlayerWeapon* weapon = weaponComp->GetEquippedWeapon();
-            if (weapon) weapon->OnCollision();
+            APlayerWeapon* Weapon = WeaponComp->GetEquippedWeapon();
+            if (Weapon) 
+            {
+                Weapon->OnCollision();
+            }
         }
     }
 }
 
 void UANS_PlayerCollision::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::NotifyEnd(MeshComp, Animation);
 
-    ACPlayer* player = Cast<ACPlayer>(MeshComp->GetOwner());
-    if (player)
+    ACPlayer* Player = Cast<ACPlayer>(MeshComp->GetOwner());
+    if (Player)
     {
-        UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(player);
-        if (weaponComp)
+        UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(Player);
+        if (WeaponComp)
         {
-            APlayerWeapon* weapon = weaponComp->GetEquippedWeapon();
-            if (weapon) weapon->OffCollision();
+            APlayerWeapon* Weapon = WeaponComp->GetEquippedWeapon();
+            if (Weapon) 
+            {
+                Weapon->OffCollision();
+            }
         }
     }
 }

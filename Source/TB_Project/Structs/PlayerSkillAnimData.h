@@ -7,13 +7,12 @@
 USTRUCT()
 struct FPlayerSkillAnimData : public FTableRowBase
 {
-    //GENERATED_BODY()
     GENERATED_USTRUCT_BODY()
 
 public:
     UPROPERTY(EditAnywhere)
-        UAnimMontage* SkillMontage;
+    UAnimMontage* SkillMontage;
 
     UPROPERTY(EditAnywhere)
-        FString SkillName;
+    FString SkillName;
 };

@@ -7,31 +7,30 @@
 USTRUCT(BlueprintType)
 struct FSkillInfoData : public FTableRowBase
 {
-    //GENERATED_BODY()
     GENERATED_USTRUCT_BODY()
 
 public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        FString SkillName;
+    FString SkillName;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        FString SkillKoreanName;
+    FString SkillKoreanName;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        FString SkillExplanation;
+    FString SkillExplanation;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        UTexture* SkillImage;
+    UTexture* SkillImage;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        int MinDamage;
+    int32 MinDamage;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        int MaxDamage;
+    int32 MaxDamage;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        bool bIsAction;
+    bool bIsAction;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        bool bNeedTarget;
+    bool bNeedTarget;
 };

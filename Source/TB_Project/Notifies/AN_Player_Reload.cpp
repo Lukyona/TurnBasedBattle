@@ -13,11 +13,20 @@ FString UAN_Player_Reload::GetNotifyName_Implementation() const
 
 void UAN_Player_Reload::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::Notify(MeshComp, Animation);
 
-    UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(MeshComp->GetOwner());
-    AGun* gun = Cast<AGun>(weaponComp->GetEquippedWeapon());
-    if (gun) gun->Reload();
+    UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(MeshComp->GetOwner());
+    if(WeaponComp)
+    {
+        AGun* Gun = Cast<AGun>(WeaponComp->GetEquippedWeapon());
+        if (Gun)
+        {
+            Gun->Reload();
+        }
+    }
 }

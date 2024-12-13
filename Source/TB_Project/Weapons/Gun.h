@@ -9,26 +9,32 @@
 /**
  * 
  */
+
+class ABullet;
+
 UCLASS()
 class TB_PROJECT_API AGun : public APlayerWeapon
 {
 	GENERATED_BODY()
 
-protected:
-	int CurBullet = 10;
-	int MaxBullet = 10;
-	
-	TSubclassOf<class ABullet> BulletClass;
-	ABullet* Bullet;
-
 public:
 	AGun();
-
 	virtual void SpawnProjectile() override;
 	virtual void Shoot() override;
 
-	void Reload();
-	int GetCurBulletAmount() { return CurBullet; }
+protected:
+	TSubclassOf<ABullet> BulletClass;
+	ABullet* Bullet;
 
+	int32 CurBullet = 10;
+	int32 MaxBullet = 10;
+
+public:
+	int32 GetCurBulletAmount() 
+	{
+		return CurBullet; 
+	}
+
+	void Reload();
 
 };

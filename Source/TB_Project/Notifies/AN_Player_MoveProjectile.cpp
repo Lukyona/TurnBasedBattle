@@ -13,15 +13,20 @@ FString UAN_Player_MoveProjectile::GetNotifyName_Implementation() const
 
 void UAN_Player_MoveProjectile::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-    if (!MeshComp || !MeshComp->GetOwner()) return;
+    if (!MeshComp || !MeshComp->GetOwner()) 
+    {
+        return;
+    }
 
     Super::Notify(MeshComp, Animation);
 
-    ACPlayer* player = Cast<ACPlayer>(MeshComp->GetOwner());
-
-    if (player)
+    ACPlayer* Player = Cast<ACPlayer>(MeshComp->GetOwner());
+    if (Player)
     {
-        UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(player);
-        if (weaponComp) weaponComp->MoveProjectile();
+        UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(Player);
+        if (WeaponComp) 
+        {
+            WeaponComp->MoveProjectile();
+        }
     }
 }

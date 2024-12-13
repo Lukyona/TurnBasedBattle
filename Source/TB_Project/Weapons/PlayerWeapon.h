@@ -6,6 +6,9 @@
 #include "Weapons/Weapon.h"
 #include "PlayerWeapon.generated.h"
 
+class UDataTable;
+class UAnimMontage;
+
 UENUM(BlueprintType)
 enum class EMagicType : uint8
 {
@@ -18,38 +21,53 @@ class TB_PROJECT_API APlayerWeapon : public AWeapon
 	GENERATED_BODY()
 
 protected:
-	class UDataTable* SkillInfoDT;
+	virtual void BeginPlay() override;
+	virtual void ApplyDamageToTarget(ACharacter* OtherCharacter) override;
+
+	UFUNCTION()
+	virtual void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+
+	UPROPERTY()
+	UDataTable* SkillInfoDT;
+	UPROPERTY()
 	UDataTable* SkillAnimDT;
 
-	class UAnimMontage* EquipMontage;
-    UPROPERTY(VisibleAnywhere)
-	class UAnimMontage* UnEquipMontage;
-	UPROPERTY(VisibleAnywhere)
-	TArray<class UAnimMontage*> HitMontages;
+	UPROPERTY()
+	UAnimMontage* EquipMontage;
+    UPROPERTY()
+	UAnimMontage* UnEquipMontage;
+	UPROPERTY()
+	TArray<UAnimMontage*> HitMontages;
 
 	float MinAttackDistance;
 
-	virtual void BeginPlay() override;
+public://Getters and setters
+	UDataTable* GetSkillInfoDT() 
+	{
+		return SkillInfoDT; 
+	}
+	UDataTable* GetSkillAnimDT() 
+	{
+		return SkillAnimDT; 
+	}
+	float GetMinAttackDistance() 
+	{
+		return MinAttackDistance; 
+	}
+	UAnimMontage* GetHitMontage(int32 Idx) 
+	{
+		return HitMontages[Idx]; 
+	}
 
-	virtual void ApplyDamageToTarget(ACharacter* OtherCharacter) override;
-
-    UFUNCTION()
-	virtual void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-			UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
-
-public:
-	UDataTable* GetSkillInfoDT() { return SkillInfoDT; }
-	UDataTable* GetSkillAnimDT() { return SkillAnimDT; }
-	float GetMinAttackDistance() { return MinAttackDistance; }
-
+	//Core methods
 	void Equip();
 	virtual void UnEquip();
+
 	void SetDatas(UAnimMontage* _EquipMontage, UAnimMontage* _UnEquipMontage, TArray<UAnimMontage*> _HitMontages, UDataTable* _SkillInfoDT, UDataTable* _SkillAnimDT);
 
 	virtual void SpawnProjectile() {};
 	virtual void Shoot() {};
 	virtual void SpawnMagic(EMagicType Type) {};
 
-
-	UAnimMontage* GetHitMontage(int idx) { return HitMontages[idx]; }
 };

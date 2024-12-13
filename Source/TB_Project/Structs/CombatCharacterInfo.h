@@ -10,11 +10,11 @@ struct FCombatCharacterInfo
 
 public:
     UPROPERTY(EditAnywhere)
-        FString Name;
+    FString Name;
 
     UPROPERTY(EditAnywhere)
-        int InitiativeNum = 0;
+    int32 InitiativeNum = 0;
 
     UPROPERTY(EditAnywhere)
-        class AGameCharacter* Character;
+    class AGameCharacter* Character;
 };

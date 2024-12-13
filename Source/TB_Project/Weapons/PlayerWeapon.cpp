@@ -22,33 +22,44 @@ void APlayerWeapon::ApplyDamageToTarget(ACharacter* OtherCharacter)
         {
             Hitted.AddUnique(Target);
 
-            float damage = MAINPC->GetSkillDamage();
-            FDamageEvent dmgEvent;
-            Target->TakeDamage(damage, dmgEvent, MAINPC, this);
+            float Damage = MAINPC->GetSkillDamage();
+            FDamageEvent DamageEvent;
+            Target->TakeDamage(Damage, DamageEvent, MAINPC, this);
         }
     }
 }
 
 void APlayerWeapon::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (!OtherActor->IsA<AEnemy>()) return;
+    if (!OtherActor->IsA<AEnemy>()) 
+    {
+        return;
+    }
     Super::OnComponentBeginOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 }
 
 void APlayerWeapon::Equip()
 {
-    if (!EquipMontage || !OwnerCharacter) return;
+    if (!EquipMontage || !OwnerCharacter) 
+    {
+        return;
+    }
 
     OwnerCharacter->PlayAnimMontage(EquipMontage);
 }
 
 void APlayerWeapon::UnEquip()
 {
-    if (!UnEquipMontage || !OwnerCharacter) return;
+    if (!UnEquipMontage || !OwnerCharacter) 
+    {
+        return;
+    }
 
-    ACPlayer* player = Cast<ACPlayer>(OwnerCharacter);
-    if (player)
-        player->PlayUnEquipMontage(UnEquipMontage);
+    ACPlayer* Player = Cast<ACPlayer>(OwnerCharacter);
+    if (Player)
+    {
+        Player->PlayUnEquipMontage(UnEquipMontage);
+    }
 }
 
 void APlayerWeapon::SetDatas(UAnimMontage* _EquipMontage, UAnimMontage* _UnEquipMontage, TArray<UAnimMontage*> _HitMontages, UDataTable* _SkillInfoDT, UDataTable* _SkillAnimDT)

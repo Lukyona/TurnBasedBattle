@@ -8,33 +8,41 @@
 
 AGun::AGun()
 {
-    USkeletalMesh* mesh;
-    CHelpers::GetAsset<USkeletalMesh>(&mesh, "SkeletalMesh'/Game/Weapons/Player/Meshes/Gun/Gun.Gun'");
-    SkeletalMesh->SetSkeletalMesh(mesh);
+    USkeletalMesh* Mesh;
+    CHelpers::GetAsset<USkeletalMesh>(&Mesh, "SkeletalMesh'/Game/Weapons/Player/Meshes/Gun/Gun.Gun'");
+    SkeletalMesh->SetSkeletalMesh(Mesh);
 
     MinAttackDistance = 1500.f;
+
     Capsule->SetRelativeScale3D(FVector::ZeroVector);
     Capsule->SetGenerateOverlapEvents(false);
 
     CHelpers::GetClass<ABullet>(&BulletClass, "Blueprint'/Game/Weapons/Player/BP_Bullet.BP_Bullet_C'");
-
 }
 
 void AGun::SpawnProjectile()
 {
-    FTransform transform = SkeletalMesh->GetSocketTransform("BulletSocket");
-    Bullet = GetWorld()->SpawnActor<ABullet>(BulletClass, transform);
-    if (!Bullet) return;
-    Bullet->AttachToComponent(SkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, "BulletSocket");
+    FTransform BulletTransform = SkeletalMesh->GetSocketTransform("BulletSocket");
+    if (BulletClass)
+    {
+        Bullet = GetWorld()->SpawnActor<ABullet>(BulletClass, BulletTransform);
+        if (Bullet)
+        {
+            Bullet->AttachToComponent(SkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, "BulletSocket");
+        }
+    }
 }
 
 void AGun::Shoot()
 {
-    if (!Bullet) return;
+    if (!Bullet || !MAINPC)
+    {
+        return;
+    }
 
     Bullet->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-    FVector dir = GetOwnerCharacter()->GetCapsuleComponent()->GetForwardVector();
-    Bullet->Shoot(dir);
+    FVector Direction = GetOwnerCharacter()->GetCapsuleComponent()->GetForwardVector();
+    Bullet->Shoot(Direction);
 
     --CurBullet;
 
@@ -44,5 +52,8 @@ void AGun::Shoot()
 void AGun::Reload()
 {
     CurBullet = MaxBullet;
-    MAINPC->UpdateBulletText(CurBullet, MaxBullet);
+    if(MAINPC)
+    {
+        MAINPC->UpdateBulletText(CurBullet, MaxBullet);
+    }
 }
