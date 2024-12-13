@@ -6,6 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "Weapon_Projectile.generated.h"
 
+class USceneComponent;
+class UCapsuleComponent;
+class UProjectileMovementComponent;
+class ACharacter;
+
 UCLASS()
 class TB_PROJECT_API AWeapon_Projectile : public AActor
 {
@@ -13,27 +18,29 @@ class TB_PROJECT_API AWeapon_Projectile : public AActor
 	
 public:	
 	AWeapon_Projectile();
-
-	virtual void Shoot(FVector Direction);
+protected:
+	virtual void BeginPlay() override;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		class USceneComponent* Root;
+	USceneComponent* Root;
 
 	UPROPERTY(VisibleDefaultsOnly)
-		class UCapsuleComponent* Capsule;
+	UCapsuleComponent* Capsule;
 
 	UPROPERTY(VisibleDefaultsOnly)
-		class UProjectileMovementComponent* Projectile;
+	UProjectileMovementComponent* Projectile;
 
-	TArray<class ACharacter*> Hitted;
+	UPROPERTY()
+	TSet<ACharacter*> Hitted;
 
 	TSubclassOf<UDamageType> DamageType;
 
-
-	virtual void BeginPlay() override;
-
+protected:
 	UFUNCTION()
-		void OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+public:
+	virtual void Shoot(FVector Direction);
 
 };

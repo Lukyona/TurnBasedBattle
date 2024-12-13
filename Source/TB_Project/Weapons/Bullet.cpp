@@ -5,7 +5,6 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Global.h"
 
-
 ABullet::ABullet()
 {
     Capsule->SetRelativeRotation(FRotator(90, 0, 0));
@@ -14,12 +13,11 @@ ABullet::ABullet()
     Capsule->CanCharacterStepUpOn = ECanBeCharacterBase::ECB_No;
 
     CHelpers::CreateComponent<UStaticMeshComponent>(this, &StaticMesh, "StaticMesh", Capsule);
-    UStaticMesh* mesh;
-    CHelpers::GetAsset<UStaticMesh>(&mesh, "StaticMesh'/Game/Weapons/Player/Bullet/Meshes/SM_PL45_01g.SM_PL45_01g'");
-    StaticMesh->SetStaticMesh(mesh);
+    UStaticMesh* Mesh;
+    CHelpers::GetAsset<UStaticMesh>(&Mesh, "StaticMesh'/Game/Weapons/Player/Bullet/Meshes/SM_PL45_01g.SM_PL45_01g'");
+    StaticMesh->SetStaticMesh(Mesh);
     StaticMesh->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
 
     Projectile->InitialSpeed = 3000.f;
     Projectile->ProjectileGravityScale = 0.f;
-
 }

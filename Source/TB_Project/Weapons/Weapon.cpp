@@ -18,17 +18,13 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	OwnerCharacter = Cast<ACharacter>(GetOwner());
-
-	//Capsule->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnComponentBeginOverlap);
 }
 
 ACharacter* AWeapon::GetOwnerCharacter()
 {
-	if (!OwnerCharacter) return nullptr;
-
-	return OwnerCharacter;
-
+	return OwnerCharacter? OwnerCharacter : nullptr;
 }
+
 void AWeapon::OnCollision()
 {
 	Capsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -42,12 +38,15 @@ void AWeapon::OffCollision()
 
 void AWeapon::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor == OwnerCharacter) return;
+	if (OtherActor == OwnerCharacter) 
+	{
+		return;
+	}
 
-	UHealthComponent* healthComp = CHelpers::GetComponent<UHealthComponent>(OtherActor);
-	if (healthComp->IsAlive())
+	UHealthComponent* HealthComp = CHelpers::GetComponent<UHealthComponent>(OtherActor);
+	if (HealthComp->IsAlive())
+	{
 		ApplyDamageToTarget(Cast<ACharacter>(OtherActor));
+	}
 
 }
-
-

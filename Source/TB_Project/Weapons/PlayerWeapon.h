@@ -64,7 +64,7 @@ public://Getters and setters
 	void Equip();
 	virtual void UnEquip();
 
-	void SetDatas(UAnimMontage* _EquipMontage, UAnimMontage* _UnEquipMontage, TArray<UAnimMontage*> _HitMontages, UDataTable* _SkillInfoDT, UDataTable* _SkillAnimDT);
+	void SetDatas(UAnimMontage* InEquipMontage, UAnimMontage* InUnEquipMontage, TArray<UAnimMontage*> InHitMontages, UDataTable* InSkillInfoDT, UDataTable* InSkillAnimDT);
 
 	virtual void SpawnProjectile() {};
 	virtual void Shoot() {};

@@ -6,6 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
+class USceneComponent;
+class USkeletalMeshComponent;
+class UCapsuleComponent;
+class ACharacter;
+
 UCLASS()
 class TB_PROJECT_API AWeapon : public AActor
 {
@@ -18,21 +23,24 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-		class USceneComponent* Root;
+	USceneComponent* Root;
 
 	UPROPERTY(VisibleAnywhere)
-		class USkeletalMeshComponent* SkeletalMesh;
+	USkeletalMeshComponent* SkeletalMesh;
 
 	UPROPERTY(VisibleDefaultsOnly)
-		class UCapsuleComponent* Capsule;
+	UCapsuleComponent* Capsule;
 
-	class ACharacter* OwnerCharacter;
+	UPROPERTY()
+	ACharacter* OwnerCharacter;
 
-	TArray<ACharacter*> Hitted;
+	UPROPERTY()
+	TSet<ACharacter*> Hitted;
+
+protected:
+	ACharacter* GetOwnerCharacter();
 
 	virtual void ApplyDamageToTarget(ACharacter* OtherCharacter) {};
-
-	class ACharacter* GetOwnerCharacter();
 
 public:	
 	virtual void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

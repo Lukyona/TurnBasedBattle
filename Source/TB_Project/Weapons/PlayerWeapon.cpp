@@ -18,10 +18,9 @@ void APlayerWeapon::ApplyDamageToTarget(ACharacter* OtherCharacter)
     AEnemy* Target = Cast<AEnemy>(OtherCharacter);
     if (Target)
     {
-        if (Hitted.Find(Target) == -1) // 타겟을 Hitted 배열에서 찾지 못했다면, 중복 방지
+        FSetElementId ElementId = Hitted.Add(Target);
+        if (ElementId.IsValidId())
         {
-            Hitted.AddUnique(Target);
-
             float Damage = MAINPC->GetSkillDamage();
             FDamageEvent DamageEvent;
             Target->TakeDamage(Damage, DamageEvent, MAINPC, this);
@@ -35,38 +34,35 @@ void APlayerWeapon::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCompo
     {
         return;
     }
+    // 부모 클래스의 동작은 오직 적이 오버랩되었을 때만 유효
     Super::OnComponentBeginOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 }
 
 void APlayerWeapon::Equip()
 {
-    if (!EquipMontage || !OwnerCharacter) 
+    if (EquipMontage && OwnerCharacter) 
     {
-        return;
+        OwnerCharacter->PlayAnimMontage(EquipMontage);
     }
-
-    OwnerCharacter->PlayAnimMontage(EquipMontage);
 }
 
 void APlayerWeapon::UnEquip()
 {
-    if (!UnEquipMontage || !OwnerCharacter) 
+    if (UnEquipMontage && OwnerCharacter) 
     {
-        return;
-    }
-
-    ACPlayer* Player = Cast<ACPlayer>(OwnerCharacter);
-    if (Player)
-    {
-        Player->PlayUnEquipMontage(UnEquipMontage);
+        ACPlayer* Player = Cast<ACPlayer>(OwnerCharacter);
+        if (Player)
+        {
+            Player->PlayUnEquipMontage(UnEquipMontage);
+        }
     }
 }
 
-void APlayerWeapon::SetDatas(UAnimMontage* _EquipMontage, UAnimMontage* _UnEquipMontage, TArray<UAnimMontage*> _HitMontages, UDataTable* _SkillInfoDT, UDataTable* _SkillAnimDT)
+void APlayerWeapon::SetDatas(UAnimMontage* InEquipMontage, UAnimMontage* InUnEquipMontage, TArray<UAnimMontage*> InHitMontages, UDataTable* InSkillInfoDT, UDataTable* InSkillAnimDT)
 {
-    EquipMontage = _EquipMontage;
-    UnEquipMontage = _UnEquipMontage;
-    HitMontages = _HitMontages;
-    SkillInfoDT = _SkillInfoDT;
-    SkillAnimDT = _SkillAnimDT;
+    EquipMontage = InEquipMontage;
+    UnEquipMontage = InUnEquipMontage;
+    HitMontages = InHitMontages;
+    SkillInfoDT = InSkillInfoDT;
+    SkillAnimDT = InSkillAnimDT;
 }

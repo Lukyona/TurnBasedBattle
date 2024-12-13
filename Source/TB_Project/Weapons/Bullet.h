@@ -13,12 +13,11 @@ UCLASS()
 class TB_PROJECT_API ABullet : public AWeapon_Projectile
 {
 	GENERATED_BODY()
-	
-	UPROPERTY(VisibleAnywhere)
-	class UStaticMeshComponent* StaticMesh;
-
 public:
 	ABullet();
 
+private:
+	UPROPERTY(VisibleAnywhere)
+	class UStaticMeshComponent* StaticMesh;
 
 };
