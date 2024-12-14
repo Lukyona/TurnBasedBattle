@@ -19,6 +19,8 @@ class UAnimMontage;
 class ATargetingCircle;
 class UStateComponent;
 class UTurnComponent;
+class UMyMovementComponent;
+class UPlayerWeaponComponent;
 
 UCLASS()
 class TB_PROJECT_API AMainPlayerController : public APlayerController
@@ -36,9 +38,14 @@ protected:
 	bool bIsFixedCamera;
 	
 	UPROPERTY()
+	UMyMovementComponent* MoveComp;
+	UPROPERTY()
+	UPlayerWeaponComponent* WeaponComp;
+	UPROPERTY()
 	UStateComponent* StateComp;
 	UPROPERTY()
 	UTurnComponent* TurnComp;
+
 
 	UPROPERTY()
 	TArray<ACharacter*> CombatCharacters;

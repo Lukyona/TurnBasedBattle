@@ -166,9 +166,9 @@ void AMainPlayerController::UpdateCombatCharacters(ACharacter* DeadCharacter) //
 
     // 살아있는 적군이 있는지 확인
     bool bIsCombatOver = true;
-    for (ACharacter* Character : CombatCharacters)
+    for (ACharacter* CombatCharacter : CombatCharacters)
     {
-        if (Character->IsA<AEnemy>())
+        if (CombatCharacter->IsA<AEnemy>())
         {
             bIsCombatOver = false;
             break;
@@ -189,7 +189,7 @@ void AMainPlayerController::UpdateCombatCharacters(ACharacter* DeadCharacter) //
         }
         
         // 순서 갱신
-        UTurnComponent* TurnComp = GetTurnComp(CombatCharacters[i]);
+        TurnComp = GetTurnComp(CombatCharacters[i]);
         if (TurnComp) 
         {
             TurnComp->SetTurnNum(TurnComp->GetTurnNum() - 1);
@@ -222,7 +222,7 @@ void AMainPlayerController::ShowSkills(UDataTable* SkillDT)
 {
     BasicUI->ShowSkills(SkillDT);
 
-    UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(GetCurPlayer());
+    WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(GetCurPlayer());
     if (WeaponComp && WeaponComp->GetCurrentWeaponType() == EWeaponType::Gun)
     {
         BasicUI->ShowBulletUIBox();
@@ -257,7 +257,7 @@ void AMainPlayerController::UpdateMovingAbility()
         return;
     }
 
-    UTurnComponent* TurnComp = GetTurnComp(GetCurPlayer());
+    TurnComp = GetTurnComp(GetCurPlayer());
     if (!TurnComp) 
     {
         return;
@@ -322,7 +322,7 @@ void AMainPlayerController::StartCombat()
     bIsCombatMode = true;
     for (FCombatCharacterInfo& CharacterInfo : CombatCharacterInfos)
     {
-        UMyMovementComponent* MoveComp = CHelpers::GetComponent<UMyMovementComponent>(CharacterInfo.Character);
+        MoveComp = CHelpers::GetComponent<UMyMovementComponent>(CharacterInfo.Character);
         if (MoveComp) 
         {
             MoveComp->SetStandMode(); // 이동 불가, 그 자리에 서 있기
@@ -350,8 +350,8 @@ void AMainPlayerController::StartCombat()
     for (const FCombatCharacterInfo& CharacterInfo : CombatCharacterInfos)
     {
         CombatUI->AddCharButtons(CharacterInfo.Character, CharacterInfo.Name);
-        UStateComponent* StateComp = CHelpers::GetComponent<UStateComponent>(CharacterInfo.Character);
-        UTurnComponent* TurnComp = GetTurnComp(CharacterInfo.Character);
+        StateComp = CHelpers::GetComponent<UStateComponent>(CharacterInfo.Character);
+        TurnComp = GetTurnComp(CharacterInfo.Character);
         if (!StateComp || !TurnComp) 
         {
             return;
@@ -363,7 +363,7 @@ void AMainPlayerController::StartCombat()
         // 플레이어 캐릭터일 경우
         if (CharacterInfo.Character->IsA<ACPlayer>())
         {
-            UMyMovementComponent* MoveComp = CHelpers::GetComponent<UMyMovementComponent>(CharacterInfo.Character);
+            MoveComp = CHelpers::GetComponent<UMyMovementComponent>(CharacterInfo.Character);
             if(MoveComp)
             {
                 MoveComp->SetMove(false);
@@ -377,7 +377,7 @@ void AMainPlayerController::StartCombat()
 
             if (CharacterInfo.Character == GetCurPlayer())
             {
-                UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(CharacterInfo.Character);
+                WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(CharacterInfo.Character);
                 if (WeaponComp) 
                 {
                     WeaponComp->SetMode(WeaponComp->GetCurrentWeaponType());
@@ -421,7 +421,6 @@ int32 AMainPlayerController::GetRandomNumber(int32 Max)
 void AMainPlayerController::StartTurn(int32 InCurNum) 
 {
     // 이전 캐릭터 턴 해제
-    UTurnComponent* TurnComp;
     if (InCurNum > 0)
     {
         TurnComp = GetTurnComp(CombatCharacters[InCurNum-1]);
@@ -486,7 +485,7 @@ void AMainPlayerController::OnMouseLeftClick()
         return;
     }
 
-    UPlayerWeaponComponent* WeaponComp = GetCurPlayer()->GetWeaponComponent();
+    WeaponComp = GetCurPlayer()->GetWeaponComponent();
     ACharacter* Target = Cast<ACharacter>(HitResult.GetActor());
     if (Target && WeaponComp)
     {
@@ -571,7 +570,7 @@ void AMainPlayerController::OnMouseLeftClick()
     }
     else // 이동 불가
     {
-        UMyMovementComponent* MoveComp = CHelpers::GetComponent<UMyMovementComponent>(GetCurPlayer());
+        MoveComp = CHelpers::GetComponent<UMyMovementComponent>(GetCurPlayer());
         if(MoveComp)
         {
             MoveComp->SetStandMode();
@@ -622,32 +621,36 @@ void AMainPlayerController::FinishCombat()
     BasicUI->HideEndTurnButton();
     SetFixedCamera(false);
 
-    for (ACharacter* Character : CombatCharacters)
+    for (ACharacter* CombatCharacter : CombatCharacters)
     {
-        ACPlayer* Player = Cast<ACPlayer>(Character);
-        if (!Player) 
+        ACPlayer* PlayerCharacter = Cast<ACPlayer>(CombatCharacter);
+        if (!PlayerCharacter)
         {
             return;
         }
 
-        Player->SetCombatTarget(nullptr);
+        PlayerCharacter->SetCombatTarget(nullptr);
 
-        if (UStateComponent* StateComp = CHelpers::GetComponent<UStateComponent>(Player))
+        StateComp = CHelpers::GetComponent<UStateComponent>(PlayerCharacter);
+        if (StateComp)
         {
             StateComp->SetIdleMode();
         }
 
-        if (UTurnComponent* TurnComp = GetTurnComp(Player))
+        TurnComp = GetTurnComp(PlayerCharacter);
+        if (TurnComp)
         {
             TurnComp->SetTurn(false);
         }
 
-        if (UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(Player))
+        WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(PlayerCharacter);
+        if (WeaponComp)
         {
             WeaponComp->UnEquip();
         }
 
-        if (UMyMovementComponent* MoveComp = CHelpers::GetComponent<UMyMovementComponent>(Player))
+        MoveComp = CHelpers::GetComponent<UMyMovementComponent>(PlayerCharacter);
+        if (MoveComp)
         {
             MoveComp->SetWalkMode();
         }
@@ -663,11 +666,11 @@ void AMainPlayerController::FinishCombat()
 
 void AMainPlayerController::StartFollowingPlayer()
 {
-    for (ACPlayer* Player : *BasicUI->GetPlayers())
+    for (ACPlayer* PlayerCharacter : *BasicUI->GetPlayers())
     {
-        if (Player != GetCurPlayer())
+        if (PlayerCharacter != GetCurPlayer())
         {
-            Player->FollowCurrentPlayer();
+            PlayerCharacter->FollowCurrentPlayer();
         }
     }
 }
