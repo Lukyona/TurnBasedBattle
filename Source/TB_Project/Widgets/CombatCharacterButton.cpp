@@ -6,39 +6,45 @@
 #include "Global.h"
 #include "Components/HealthComponent.h"
 
-void UCombatCharacterButton::AddCharacterName(ACharacter* Char)
+void UCombatCharacterButton::AddCharacterName(ACharacter* InCharacter)
 {
-    FString name = GetCharacterName(Char->GetName());
-    AllCharacters.AddUnique(name);
+    FString Name = GetCharacterName(InCharacter->GetName());
+    AllCharacters.AddUnique(Name);
 }
 
-FString UCombatCharacterButton::GetCharacterName(FString name)
+FString UCombatCharacterButton::GetCharacterName(FString RawName)
 {
-    FString tmp;
-    name = name.RightChop(3);
-    for (int i = 0; i < name.Len(); ++i)
+    FString Tmp;
+    RawName = RawName.RightChop(3);
+    for (int i = 0; i < RawName.Len(); ++i)
     {
-        if (name[i] == '_')
-            break;
-
-        if (isdigit(name[i])) // 숫자가 _보다 먼저 나오면
+        if (RawName[i] == '_')
         {
-            FString str(name.Chr(name[i]));
-            name.Split(str, &name, &tmp);
-            return name;
+            break;
+        }
+
+        if (isdigit(RawName[i])) // 숫자가 _보다 먼저 나오면
+        {
+            FString Str(RawName.Chr(RawName[i]));
+            RawName.Split(Str, &RawName, &Tmp);
+            return RawName;
         }
     }
-    name.Split("_", &name, &tmp);
-    return name;
+    RawName.Split("_", &RawName, &Tmp);
+    return RawName;
 }
 
-float UCombatCharacterButton::GetHealthProgressBarPercent(ACharacter* Char)
+float UCombatCharacterButton::GetHealthProgressBarPercent(ACharacter* InCharacter)
 {
-    UHealthComponent* healthComp = CHelpers::GetComponent<UHealthComponent>(Char);
-    float cur = healthComp->GetHealth();
-    float max = healthComp->GetMaxHealth();
+    UHealthComponent* HealthComp = CHelpers::GetComponent<UHealthComponent>(InCharacter);
+    if (!HealthComp)
+    {
+        return -1.f;
+    }
+    float CurHealth = HealthComp->GetHealth();
+    float MaxHealth = HealthComp->GetMaxHealth();
 
-    float value = cur / max;
+    float Value = CurHealth / MaxHealth;
 
-    return 1.f - value;
+    return 1.f - Value;
 }

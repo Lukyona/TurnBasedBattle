@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Widgets/BasicUI.h"
 #include "Components/Button.h"
+
 #include "Global.h"
 #include "Character/CPlayer_Revenant.h"
 #include "Character/CPlayer_Aurora.h"
@@ -28,56 +28,72 @@ void UBasicUI::NativeConstruct()
     Players.Add(Player1);
     Players.Add(Player2);
     Players.Add(Player3);
-
-}
-
-void UBasicUI::EndTurn()
-{
-    TurnComp = CurPlayer->GetTurnComponent();
-    StateComp = CurPlayer->GetStateComponent();
-    if (!TurnComp->IsMyTurn() || StateComp->IsMovingMode() || StateComp->IsAttackMode())
-        return;
-
-    if (StateComp->IsPrepareMode())
-        StopPrepareMode();
-
-    StateComp->SetWaitMode();
-    MAINPC->StartTurn(TurnComp->GetTurnNum());
 }
 
 void UBasicUI::ChangePlayer(ACPlayer* TargetPlayer)
 {
     StateComp = CurPlayer->GetStateComponent();
-    if (StateComp->IsMovingMode()) return;
+    if (StateComp->IsMovingMode() || !MAINPC)
+    {
+        return;
+    }
 
-    if (StateComp->IsPrepareMode()) StopPrepareMode();
+    if (StateComp->IsPrepareMode()) 
+    {
+        StopPrepareMode();
+    }
 
-    if (TargetPlayer->IsA<ACPlayer_Revenant>()) PlayerType = EPlayerType::Revenent;
-    if (TargetPlayer->IsA<ACPlayer_Aurora>()) PlayerType = EPlayerType::Aurora;
-    if (TargetPlayer->IsA<ACPlayer_Sparrow>()) PlayerType = EPlayerType::Sparrow;
+    if (TargetPlayer->IsA<ACPlayer_Revenant>())
+    {
+        PlayerType = EPlayerType::Revenent;
+    }
+    if (TargetPlayer->IsA<ACPlayer_Aurora>()) 
+    {
+        PlayerType = EPlayerType::Aurora;
+    }
+    if (TargetPlayer->IsA<ACPlayer_Sparrow>()) 
+    {
+        PlayerType = EPlayerType::Sparrow;
+    }
         
     CurPlayer = TargetPlayer;
-
     CurPlayer->ClearFollowTimer();
     CurPlayer->ResetSpringArm();
     MAINPC->Possess(CurPlayer);
 
-    if (CurPlayer == Player1) ShowMagicButton();
-    else HideMagicButton();
+    if (CurPlayer == Player1) 
+    {
+        ShowMagicButton();
+    }
+    else 
+    {
+        HideMagicButton();
+    }
 
     WeaponComp = CurPlayer->GetWeaponComponent();
-    if(WeaponComp) WeaponComp->SetSkillIcons();
-
-    if (MAINPC->IsCombatMode()) CheckTurnState();
-
-    for (ACPlayer* player : Players)
+    if(WeaponComp) 
     {
-        if (player == CurPlayer) continue;
+        WeaponComp->SetSkillIcons();
+    }
 
-        player->PossessAIController();
+    if (MAINPC->IsCombatMode()) 
+    {
+        CheckTurnState();
+    }
+
+    for (ACPlayer* Player : Players)
+    {
+        if (Player == CurPlayer) 
+        {
+            continue;
+        }
+
+        Player->PossessAIController();
 
         if (!MAINPC->IsCombatMode())
-            player->FollowCurrentPlayer();
+        {
+            Player->FollowCurrentPlayer();
+        }
     }
 
     SetPlayerImg();
@@ -87,36 +103,39 @@ void UBasicUI::EnableSkillButtons()
 {
     WeaponComp = CurPlayer->GetWeaponComponent();
 
-    for (USkillButton* sb : SkillButtons)
+    for (USkillButton* SkillButton : SkillButtons)
     {
-        sb->SetIsEnabled(true);
-        AGun* gun = Cast<AGun>(WeaponComp->GetEquippedWeapon());
-        if (gun)
+        SkillButton->SetIsEnabled(true);
+
+        AGun* Gun = Cast<AGun>(WeaponComp->GetEquippedWeapon());
+        if (Gun && Gun->GetCurBulletAmount() <= 2)
         {
-            if (gun->GetCurBulletAmount() <= 2)
-                UpdateGunSkills(gun->GetCurBulletAmount());
+            DisableSkillsBasedOnBullets(Gun->GetCurBulletAmount());
         }
     }
-
-    
 }
 
 void UBasicUI::DisableSkillButtons()
 {
-    for (USkillButton* sb : SkillButtons)
+    for (USkillButton* SkillButton : SkillButtons)
     {
-        sb->SetIsEnabled(false);
+        SkillButton->SetIsEnabled(false);
     }
 }
 
 void UBasicUI::UpdateSkillButton(FString NewSelectedSkillName)
 {
-    if (NewSelectedSkillName == SelectedSkillName) return;
-
-    for (USkillButton* sb : SkillButtons)
+    if (NewSelectedSkillName == SelectedSkillName) 
     {
-        if (sb->GetSkillName() == SelectedSkillName)
-            sb->CancelSelection();
+        return;
+    }
+
+    for (USkillButton* SkillButton : SkillButtons)
+    {
+        if (SkillButton->GetSkillName() == SelectedSkillName)
+        {
+            SkillButton->CancelSelection();
+        }
     }
 
     SelectedSkillName = NewSelectedSkillName;
@@ -124,11 +143,11 @@ void UBasicUI::UpdateSkillButton(FString NewSelectedSkillName)
 
 void UBasicUI::CancelSelectedSkill()
 {
-    for (USkillButton* sb : SkillButtons)
+    for (USkillButton* SkillButton : SkillButtons)
     {
-        if (sb->IsSelectedNow())
+        if (SkillButton->IsSelectedNow())
         {
-            sb->CancelSelection();
+            SkillButton->CancelSelection();
         }
     }
 
@@ -139,6 +158,11 @@ void UBasicUI::CancelSelectedSkill()
 void UBasicUI::CheckTurnState()
 {
     TurnComp = CurPlayer->GetTurnComponent();
+    if (!TurnComp || !MAINPC)
+    {
+        return;
+    }
+
     if (TurnComp->IsMyTurn())
     {
         MAINPC->GetCombatUI()->HideMessage();
@@ -156,15 +180,19 @@ void UBasicUI::CheckTurnState()
 void UBasicUI::HideSkillInfo()
 {
     if (SkillInfoBox)
+    {
         SkillInfoBox->SetVisibility(ESlateVisibility::Hidden);
+    }
 }
 
-int UBasicUI::GetSkillDamage()
+int32 UBasicUI::GetSkillDamage()
 {
-    for (USkillButton* sb : SkillButtons)
+    for (USkillButton* SkillButton : SkillButtons)
     {
-        if (sb->IsSelectedNow())
-            return sb->GetRandomDamage();
+        if (SkillButton->IsSelectedNow())
+        {
+            return SkillButton->GetRandomDamage();
+        }
     }
 
     return 0;
@@ -172,18 +200,26 @@ int UBasicUI::GetSkillDamage()
 
 FString UBasicUI::SetHealthText(ACharacter* Character)
 {
-    UHealthComponent* healthComp = CHelpers::GetComponent<UHealthComponent>(Character);
-    FString CurHealth = FString::FromInt(healthComp->GetHealth());
-    FString MaxHealth = FString::FromInt(healthComp->GetMaxHealth());
+    UHealthComponent* HealthComp = CHelpers::GetComponent<UHealthComponent>(Character);
+    if (!HealthComp)
+    {
+        return "";
+    }
+    FString CurHealth = FString::FromInt(HealthComp->GetHealth());
+    FString MaxHealth = FString::FromInt(HealthComp->GetMaxHealth());
 
     return CurHealth + "/" + MaxHealth;
 }
 
 float UBasicUI::SetHealthProgressBar(ACharacter* Character)
 {
-    UHealthComponent* healthComp = CHelpers::GetComponent<UHealthComponent>(Character);
-    float CurHealth = healthComp->GetHealth();
-    float MaxHealth = healthComp->GetMaxHealth();
+    UHealthComponent* HealthComp = CHelpers::GetComponent<UHealthComponent>(Character);
+    if (!HealthComp)
+    {
+        return -1.f;
+    }
+    float CurHealth = HealthComp->GetHealth();
+    float MaxHealth = HealthComp->GetMaxHealth();
 
     return 1.f - (CurHealth / MaxHealth);
 }
@@ -191,6 +227,10 @@ float UBasicUI::SetHealthProgressBar(ACharacter* Character)
 float UBasicUI::GetActionAbilityBarPercent()
 {
     TurnComp = CurPlayer->GetTurnComponent();
+    if (!TurnComp)
+    {
+        return - 1.f;
+    }
     float CurAbility = TurnComp->GetCurActionAbility();
     float OriginAbility = TurnComp->GetOriginActionAbility();
 
@@ -200,64 +240,66 @@ float UBasicUI::GetActionAbilityBarPercent()
 float UBasicUI::GetMovingAbilityBarPercent()
 {
     TurnComp = CurPlayer->GetTurnComponent();
+    if (!TurnComp)
+    {
+        return -1.f;
+    }
     float CurAbility = TurnComp->GetCurMovingAbility();
     float OriginAbility = TurnComp->GetOriginMovingAbility();
 
     return (CurAbility / OriginAbility) - 0.09f;
 }
 
-void UBasicUI::UpdateGunSkills(int CurBullet)
+void UBasicUI::DisableSkillsBasedOnBullets(int32 CurBullet)
 {
-    if (CurBullet > 2) return;
+    if (CurBullet > 2) 
+    {
+        return;
+    }
 
-    int min = 0;
-    if (CurBullet == 0) min = 0;
-    if (CurBullet == 1) min = 2;
-    if (CurBullet == 2) min = 3;
+    int32 Min = 0;
+    if (CurBullet >= 1) 
+    {
+        Min = CurBullet + 1;
+    }
 
+    //CurBullet == 0 → 범위 0~3 (스킬 0, 1, 2, 3 모두 비활성화)
+    //CurBullet == 1 → 범위 2~3 (스킬 2, 3 비활성화)
+    //CurBullet == 2 → 범위 3~3 (스킬 3 비활성화)
     for (int i = 0; i < SkillButtons.Num(); ++i)
     {
         // 이 범위 안에 들어온다면 해당 스킬은 총알 부족으로 사용 불가
-        bool b = UKismetMathLibrary::InRange_IntInt(i, min, 3); 
-        SkillButtons[i]->SetIsEnabled(!b);
+        bool bIsValid = UKismetMathLibrary::InRange_IntInt(i, Min, 3); 
+        SkillButtons[i]->SetIsEnabled(!bIsValid);
     }
 }
 
 void UBasicUI::ToggleMagicMode()
 {
-    if (CurPlayer != Player1) return;
+    if (CurPlayer != Player1) //플레이어1(레버넌트)만 마법 사용 가능
+    {
+        return;
+    }
 
     WeaponComp = CurPlayer->GetWeaponComponent();
-
-    if (WeaponComp->GetCurrentWeaponType() == EWeaponType::Magic)
+    if (WeaponComp)
     {
-        if (MAINPC->IsCombatMode())
-        {
-            WeaponComp->SetCurrentWeapon(EWeaponType::Gun);
-            WeaponComp->SetMode(EWeaponType::Gun);
-        }
-        else
-        {
-            WeaponComp->SetMode(EWeaponType::UnArmed);
-            WeaponComp->SetCurrentWeapon(EWeaponType::Gun);
-        }
-    }
-    else
-    {
-        WeaponComp->SetCurrentWeapon(EWeaponType::Magic);
-        WeaponComp->SetMode(EWeaponType::Magic);
+        WeaponComp->ToggleMagicMode();
     }
 }
 
 void UBasicUI::StopPrepareMode()
 {
-    MAINPC->StopAttackPose();
-
-    for (USkillButton* sb : SkillButtons)
+    if (MAINPC)
     {
-        if (sb->IsSelectedNow())
+        MAINPC->StopAttackPose();
+    }
+
+    for (USkillButton* SkillButton : SkillButtons)
+    {
+        if (SkillButton->IsSelectedNow())
         {
-            sb->RemoveSkillHoverEffect();
+            SkillButton->RemoveSkillHoverEffect();
             break;
         }
     }
@@ -265,6 +307,8 @@ void UBasicUI::StopPrepareMode()
 
 void UBasicUI::RemoveAllSkillHoverEffect()
 {
-    for (USkillButton* sb : SkillButtons)
-        sb->RemoveSkillHoverEffect();
+    for (USkillButton* SkillButton : SkillButtons)
+    {
+        SkillButton->RemoveSkillHoverEffect();
+    }
 }

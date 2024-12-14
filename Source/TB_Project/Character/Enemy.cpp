@@ -123,7 +123,7 @@ void AEnemy::NotifyActorBeginCursorOver()
         return;
     }
 
-    if(HealthComponent->IsAlive())
+    if(HealthComponent->IsAlive() && MAINPC->GetCurPlayer()->GetStateComponent()->IsPrepareMode())
     {
         MAINPC->SpawnTargetCharacterCircle(this);
     }
@@ -141,6 +141,7 @@ void AEnemy::NotifyActorEndCursorOver()
         UE_LOG(LogTemp, Warning, TEXT("MAINPC or HealthComponent is null. NotifyActorBeginCursorOver skipped."));
         return;
     }
+
     if (HealthComponent->IsAlive())
     {
         MAINPC->DestroyTargetCharacterCircle();

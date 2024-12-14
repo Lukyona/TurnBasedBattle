@@ -108,7 +108,10 @@ void ACPlayer::ResetSpringArm()
 
 void ACPlayer::NotifyActorBeginCursorOver()
 {
-    MAINPC->SpawnTargetCharacterCircle(this);
+    if(MAINPC->GetCurPlayer()->GetStateComponent()->IsPrepareMode()) // 조작 캐릭터가 스킬 선택했을 경우만
+    {
+        MAINPC->SpawnTargetCharacterCircle(this);
+    }
 }
 
 void ACPlayer::NotifyActorEndCursorOver()

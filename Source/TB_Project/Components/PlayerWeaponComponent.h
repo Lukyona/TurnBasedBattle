@@ -97,6 +97,8 @@ public:// Getters and setters
 
 	void GetHit(EHitDirection Direction);
 
+	void ToggleMagicMode();
+
 	FWeaponTypeChanged OnWeaponTypeChanged;
 
 };

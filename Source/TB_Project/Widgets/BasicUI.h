@@ -6,6 +6,14 @@
 #include "Blueprint/UserWidget.h"
 #include "BasicUI.generated.h"
 
+class ACPlayer;
+class UTurnComponent;
+class UStateComponent;
+class UPlayerWeaponComponent;
+class USkillButton;
+class USkillInfoBox;
+class UDataTable;
+
 UENUM(BlueprintType)
 enum class EPlayerType : uint8
 {
@@ -24,34 +32,46 @@ protected:
 	EPlayerType PlayerType = EPlayerType::Revenent;
 
 	UPROPERTY(BlueprintReadOnly)
-	class ACPlayer* Player1;
+	ACPlayer* Player1;
 	UPROPERTY(BlueprintReadOnly)
-	class ACPlayer* Player2;
+	ACPlayer* Player2;
 	UPROPERTY(BlueprintReadOnly)
-	class ACPlayer* Player3;
+	ACPlayer* Player3;
 
 	UPROPERTY(BlueprintReadOnly)
-	class ACPlayer* CurPlayer;
+	ACPlayer* CurPlayer;
 
+	UPROPERTY()
 	TArray<ACPlayer*> Players;
 
-	class UTurnComponent* TurnComp;
-	class UStateComponent* StateComp;
-	class UPlayerWeaponComponent* WeaponComp;
+	UPROPERTY()
+	UTurnComponent* TurnComp;
+	UPROPERTY()
+	UStateComponent* StateComp;
+	UPROPERTY()
+	UPlayerWeaponComponent* WeaponComp;
 
     UPROPERTY(BlueprintReadWrite)
-	TArray<class USkillButton*> SkillButtons;
+	TArray<USkillButton*> SkillButtons;
 
 	UPROPERTY(BlueprintReadWrite)
 	FString SelectedSkillName;
 
 	UPROPERTY(BlueprintReadWrite)
-	class USkillInfoBox* SkillInfoBox;
+	USkillInfoBox* SkillInfoBox;
 
-	UFUNCTION(BlueprintCallable)
-	void EndTurn();
+public: //Getters
+	TArray<ACPlayer*>* GetPlayers() 
+	{
+		return &Players; 
+	}
 
-public:
+	FString GetSelectedSkillName() 
+	{
+		return SelectedSkillName; 
+	}
+
+public://Core methods
 	UFUNCTION(BlueprintCallable)
 	void ChangePlayer(ACPlayer* TargetPlayer);
 
@@ -59,7 +79,7 @@ public:
 	void SetPlayerImg();
 
     UFUNCTION(BlueprintImplementableEvent)
-		void ShowSkills(class UDataTable* SkillInfoDT);
+	void ShowSkills(UDataTable* SkillInfoDT);
 
 	UFUNCTION(BlueprintCallable)
 	void EnableSkillButtons();
@@ -69,6 +89,7 @@ public:
 	void UpdateSkillButton(FString NewSelectedSkillName);
 
 	void CancelSelectedSkill();
+
 	void CheckTurnState();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
@@ -76,7 +97,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void HideSkillInfo();
 
-	int GetSkillDamage();
+	int32 GetSkillDamage();
+
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowEndTurnButton();
@@ -109,14 +131,14 @@ public:
 	void HideBulletUIBox();
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void UpdateBulletText(int Cur, int Max);
+	void UpdateBulletText(int32 Cur, int32 Max);
 
-	void UpdateGunSkills(int CurBullet);
+	void DisableSkillsBasedOnBullets(int32 CurBullet);
 
 	UFUNCTION(BlueprintImplementableEvent)
-		void ShowMagicButton();
+	void ShowMagicButton();
 	UFUNCTION(BlueprintImplementableEvent)
-		void HideMagicButton();
+	void HideMagicButton();
 
     UFUNCTION(BlueprintCallable)
 	void ToggleMagicMode();
@@ -124,9 +146,5 @@ public:
 	void StopPrepareMode();
 
 	void RemoveAllSkillHoverEffect();
-
-	TArray<ACPlayer*>* GetPlayers() { return &Players; }
-
-	FString GetSelectedSkillName() { return SelectedSkillName; }
 
 };

@@ -6,26 +6,28 @@
 #include "Components/HealthComponent.h"
 #include "Widgets/CombatCharacterButton.h"
 
-
-void UCombatUI::UpdateCharButtons(int Num)
+void UCombatUI::UpdateCharButtons(int32 TurnNum)
 {
-    if (Num == 0)
+    if (TurnNum == 0)
+    {
         CombatCharacterButtons[CombatCharacterButtons.Num() - 1]->ScaleDown();
+    }
     else
-        CombatCharacterButtons[Num - 1]->ScaleDown();
+    {
+        CombatCharacterButtons[TurnNum - 1]->ScaleDown();
+    }
     
-    CombatCharacterButtons[Num]->ScaleUp();
-
+    CombatCharacterButtons[TurnNum]->ScaleUp();
 }
 
 UCombatCharacterButton* UCombatUI::GetDeadCharButton(ACharacter* Character)
 {
-    for (UCombatCharacterButton* ccb : CombatCharacterButtons)
+    for (UCombatCharacterButton* CharButton : CombatCharacterButtons)
     {
-        if (ccb->GetCharacter() == Character)
+        if (CharButton->GetCharacter() == Character)
         {
-            ccb->ButtonDown();
-            return ccb;
+            CharButton->ButtonDown();
+            return CharButton;
         }
     }
     return nullptr;
@@ -33,9 +35,11 @@ UCombatCharacterButton* UCombatUI::GetDeadCharButton(ACharacter* Character)
 
 void UCombatUI::UpdateEnemyHealth(ACharacter* Enemy)
 {
-    UHealthComponent* healthComp = CHelpers::GetComponent<UHealthComponent>(Enemy);
-    int cur = healthComp->GetHealth();
-    int max = healthComp->GetMaxHealth();
-    SetEnemyHealth(cur, max);
+    UHealthComponent* HealthComp = CHelpers::GetComponent<UHealthComponent>(Enemy);
+    if (HealthComp)
+    {
+        int32 CurHealth = HealthComp->GetHealth();
+        int32 MaxHealth = HealthComp->GetMaxHealth();
+        SetEnemyHealth(CurHealth, MaxHealth);
+    }
 }
-

@@ -44,6 +44,6 @@ public: // Getters and setters
     UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsAlive() 
 	{
-		return Health > 0 ? true : false; 
+		return Health > 0; 
 	}
 };

@@ -16,5 +16,5 @@ class TB_PROJECT_API USkillInfoBox : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-		void SetInformation(const FString& Name, const FString& Expl, int MinDam, int MaxDam);
+	void SetInformation(const FString& InName, const FString& InExplanation, int32 InMinDamage, int32 InMaxDamage);
 };

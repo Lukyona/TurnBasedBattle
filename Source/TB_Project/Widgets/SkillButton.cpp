@@ -3,6 +3,7 @@
 
 #include "Widgets/SkillButton.h"
 #include "Engine/DataTable.h"
+
 #include "Global.h"
 #include "Structs/PlayerSkillAnimData.h"
 #include "Character/CPlayer.h"
@@ -11,36 +12,48 @@
 
 void USkillButton::PrepareSkill()
 {
-    if (!MAINPC->IsCombatMode()) return;
-
-    TArray<FPlayerSkillAnimData*> datas;
-    MAINPC->GetCurPlayer()->GetWeaponComponent()->GetEquippedWeapon()->GetSkillAnimDT()->GetAllRows<FPlayerSkillAnimData>("", datas);
-    for (FPlayerSkillAnimData* data : datas)
+    if (!MAINPC || !MAINPC->IsCombatMode())
     {
-        if (data->SkillName == SkillName)
-        {
-            if (bIsAction) MAINPC->PlayAction(data->SkillMontage, bNeedTarget);
-            else MAINPC->PlayAttackPose(data->SkillMontage);
-        }
+        return;
+    }
+
+    UDataTable* SkillAnimDT = MAINPC->GetCurPlayer()->GetWeaponComponent()->GetEquippedWeapon()->GetSkillAnimDT();
+    if (!SkillAnimDT)
+    {
+        return;
+    }
+
+    FPlayerSkillAnimData* Row = SkillAnimDT->FindRow<FPlayerSkillAnimData>(FName(*SkillName), "PrepareSkill");
+    if (!Row)
+    {
+        return;
+    }
+
+    if (bIsAction)
+    {
+        MAINPC->PlayAction(Row->SkillMontage, bIsNeedTarget);
+    }
+    else
+    {
+        MAINPC->PlayAttackPose(Row->SkillMontage);
     }
 }
 
-void USkillButton::GetSkillInfo(FString& Skill_Name, FString& Skill_Explanation, int& Min_Dam, int& Max_Dam)
+void USkillButton::GetSkillInfo(FString& OutSkillName, FString& OutSkillExplanation, int32& OutMinDamage, int32& OutMaxDamage)
 {
-    Skill_Name = SkillKoreanName;
-    Skill_Explanation = SkillExplanation;
-    Min_Dam = MinDamage;
-    Max_Dam = MaxDamage;
+    OutSkillName = SkillKoreanName;
+    OutSkillExplanation = SkillExplanation;
+    OutMinDamage = MinDamage;
+    OutMaxDamage = MaxDamage;
 }
 
-int USkillButton::GetRandomDamage()
+int32 USkillButton::GetRandomDamage()
 {
-    int Damage = UKismetMathLibrary::RandomIntegerInRange(MinDamage, MaxDamage);
-    return Damage;
+    return UKismetMathLibrary::RandomIntegerInRange(MinDamage, MaxDamage);
 }
 
 void USkillButton::CancelSelection()
 {
-    bSelected = false;
+    bIsSelected = false;
     RemoveSkillHoverEffect();
 }

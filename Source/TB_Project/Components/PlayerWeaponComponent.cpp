@@ -196,3 +196,25 @@ void UPlayerWeaponComponent::GetHit(EHitDirection Direction)
 		OwnerPlayer->PlayAnimMontage(EquippedWeapon->GetHitMontage(Index));
 	}
 }
+
+void UPlayerWeaponComponent::ToggleMagicMode()
+{
+	if (GetCurrentWeaponType() == EWeaponType::Magic)
+	{
+		if (MAINPC->IsCombatMode())
+		{
+			SetCurrentWeapon(EWeaponType::Gun);
+			SetMode(EWeaponType::Gun);
+		}
+		else
+		{
+			SetMode(EWeaponType::UnArmed);
+			SetCurrentWeapon(EWeaponType::Gun);
+		}
+	}
+	else
+	{
+		SetCurrentWeapon(EWeaponType::Magic);
+		SetMode(EWeaponType::Magic);
+	}
+}

@@ -7,46 +7,56 @@
 #include "Components/TimelineComponent.h"
 #include "DamageAmount.generated.h"
 
+class UDamageAmountText;
+class UWidgetComponent;
+class UTimelineComponent;
+
 UCLASS()
 class TB_PROJECT_API ADamageAmount : public AActor
 {
 	GENERATED_BODY()
 
-	class UDamageAmountText* DamageText;
-
-	FVector StartLoc;
-	FVector EndLoc;
-
-    UPROPERTY(VisibleAnywhere)
-	class UWidgetComponent* Widget;
-
-	class UTimelineComponent* Timeline;
-	//FTimeline Timeline;
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true))
-		int Damage;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Timeline")
-		UCurveFloat* Curve;
-
-public:	
+public:
 	ADamageAmount();
 
 protected:
 	virtual void BeginPlay() override;
-
-	UFUNCTION()
-		void SetDmgAmtLocation();
-
-	UFUNCTION()
-		void DestroyDmgAmt();
-public:	
 	virtual void Tick(float DeltaTime) override;
+	
+	UPROPERTY()
+	UDamageAmountText* DamageText;
 
-	void SetDamage(int Value) { Damage = Value; }
-	int GetDamage() { return Damage; }
+    UPROPERTY(VisibleAnywhere)
+	UWidgetComponent* Widget;
 
-	FOnTimelineFloat TimelineUpdateFunc{};
+	FVector StartLoc, EndLoc;
+
+	UPROPERTY()
+	UTimelineComponent* Timeline;
+
+	FVector PreviousCameraLoc;
+
+protected:
+	int32 Damage;
+
+	UPROPERTY()
+	UCurveFloat* Curve;
+
+public:	//Getter and setter
+	int32 GetDamage() 
+	{
+		return Damage; 
+	}
+	void SetDamage(int32 Value) 
+	{
+		Damage = Value; 
+	}
+
+protected: //Core methods
+	UFUNCTION()
+	void SetDamageUILocation();
+
+	UFUNCTION()
+	void DestroyDamageUI();
 
 };

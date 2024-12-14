@@ -9,6 +9,9 @@
 /**
  * 
  */
+class ACharacter;
+class UObject;
+
 UCLASS()
 class TB_PROJECT_API UCombatCharacterButton : public UUserWidget
 {
@@ -16,35 +19,44 @@ class TB_PROJECT_API UCombatCharacterButton : public UUserWidget
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
-	class ACharacter* Character;
+	ACharacter* Character;
 
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FString> AllCharacters;
 
 	UPROPERTY(BlueprintReadWrite)
-	class UObject* Image;
+	UObject* Image;
 
-public:
+public: //Getters and setters
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	ACharacter* GetCharacter() 
+	{
+		return Character; 
+	}
+	UFUNCTION(BlueprintCallable)
+	void SetCharacter(ACharacter* InCharacter) 
+	{
+		Character = InCharacter;
+	}
+
+	//Core methods
+	UFUNCTION(BlueprintCallable)
+	void AddCharacterName(ACharacter* InCharacter);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FString GetCharacterName(FString RawName);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetHealthProgressBarPercent(ACharacter* InCharacter);
+
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void SetCharButtonImg(const FString& Name);
+	void SetCharButtonImg(const FString& InName);
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void ScaleDown();
 	UFUNCTION(BlueprintImplementableEvent)
 	void ScaleUp();
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void ButtonDown();
-
-	UFUNCTION(BlueprintCallable)
-	void SetCharacter(ACharacter* Char) { Character = Char; }
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	ACharacter* GetCharacter() { return Character; }
-
-	UFUNCTION(BlueprintCallable)
-	void AddCharacterName(class ACharacter* Char);
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-		FString GetCharacterName(FString name);
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-		float GetHealthProgressBarPercent(ACharacter* Char);
 };

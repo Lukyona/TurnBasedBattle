@@ -6,6 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "TargetingCircle.generated.h"
 
+class USceneComponent;
+class UDecalComponent;
+class UBoxComponent;
+
 UCLASS()
 class TB_PROJECT_API ATargetingCircle : public AActor
 {
@@ -13,28 +17,30 @@ class TB_PROJECT_API ATargetingCircle : public AActor
 	
 public:	
 	ATargetingCircle();
-
-	void SetColorGreen();
-	void SetColorWhite();
+protected:
+	virtual void BeginPlay() override;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-	class USceneComponent* Root;
+	USceneComponent* Root;
 
     UPROPERTY(EditDefaultsOnly)
-	class UDecalComponent* Decal;
+	UDecalComponent* Decal;
 
 	UPROPERTY(VisibleAnywhere)
-	class UBoxComponent* Box;
+	UBoxComponent* Box;
 
+	UPROPERTY()
+	UMaterialInstance* GreenMaterial;
+	UPROPERTY()
+	UMaterialInstance* WhiteMaterial;
 
-	virtual void BeginPlay() override;
 
 	UFUNCTION()
-		void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-
-	UMaterialInstance* M_Green;
-	UMaterialInstance* M_White;
+public:
+	void SetColorGreen();
+	void SetColorWhite();
 
 };

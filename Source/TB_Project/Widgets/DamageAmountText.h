@@ -16,9 +16,16 @@ class TB_PROJECT_API UDamageAmountText : public UUserWidget
 
 protected:
     UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
-	int Damage;
+	int32 Damage = 0;
 
 public:
-	void SetDamage(int value) { Damage = value; }
+	int32 GetDamage()
+	{
+		return Damage;
+	}
+	void SetDamage(int32 value) 
+	{
+		Damage = value; 
+	}
 	
 };
