@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "MainPlayerController.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/Character.h"
 #include "NavigationSystem.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include <limits>
+
 #include "Global.h"
 #include "Character/GameCharacter.h"
 #include "Character/CPlayer.h"
@@ -19,6 +19,11 @@
 #include "Widgets/CombatUI.h"
 #include "Widgets/TargetingCircle.h"
 
+constexpr float MinCameraPitch = -60.f;
+constexpr float MaxCameraPitch = -20.f;
+constexpr float PlayerStopThreshold = 10.f;
+constexpr float MaxTraceLength = 3000.f;
+
 AMainPlayerController* AMainPlayerController::MainPlayerController = nullptr;
 
 AMainPlayerController::AMainPlayerController()
@@ -30,19 +35,27 @@ AMainPlayerController::AMainPlayerController()
 
 void AMainPlayerController::BeginPlay()
 {
-    FInputModeGameAndUI inputMode;
-    inputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    inputMode.SetHideCursorDuringCapture(false);
-    SetInputMode(inputMode);
+    FInputModeGameAndUI InputMode;
+    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    InputMode.SetHideCursorDuringCapture(false);
+    SetInputMode(InputMode);
 
     bShowMouseCursor = true;
 
     BasicUI = CreateWidget<UBasicUI>(this, BasicUIClass);
-    
-    if (BasicUI) BasicUI->AddToViewport();
+    if (BasicUI) 
+    {
+        BasicUI->AddToViewport();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to create BasicUI!"));
+        checkf(BasicUI, TEXT("BasicUI creation failed! Game cannot continue.")); //false일 경우 실행 중단
+        return;
+    }
 
-    PlayerCameraManager->ViewPitchMin = -60.f;
-    PlayerCameraManager->ViewPitchMax = -20.f;
+    PlayerCameraManager->ViewPitchMin = MinCameraPitch;
+    PlayerCameraManager->ViewPitchMax = -MaxCameraPitch;
 }
 
 void AMainPlayerController::SetMainPC(APlayerController* Controller)
@@ -57,43 +70,46 @@ ACPlayer* AMainPlayerController::GetCurPlayer()
 
 UStateComponent* AMainPlayerController::GetCurPlayerStateComp()
 {
-    StateComp = CHelpers::GetComponent<UStateComponent>(GetCurPlayer());
-    return StateComp;
+    return CHelpers::GetComponent<UStateComponent>(GetCurPlayer());
 }
 
-UTurnComponent* AMainPlayerController::GetTurnComp(ACharacter* Char)
+UTurnComponent* AMainPlayerController::GetTurnComp(ACharacter* InCharacter)
 {
-    TurnComp = CHelpers::GetComponent<UTurnComponent>(Char);
-    return TurnComp;
+    return CHelpers::GetComponent<UTurnComponent>(InCharacter);
 }
 
 void AMainPlayerController::SpawnTargetCharacterCircle(ACharacter* Target)
 {
-    if (!GetCurPlayerStateComp()->IsPrepareMode()) return;
+    if (!GetCurPlayerStateComp()->IsPrepareMode()) // 공격 준비 상태일 때만 실행
+    {
+        return;
+    }
 
-    FTransform transform;
+    FVector TargetLocation;
+    TargetLocation.X = Target->GetActorLocation().X;
+    TargetLocation.Y = Target->GetActorLocation().Y;
+    TargetLocation.Z = Target->GetActorLocation().Z - Target->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
-    FVector location;
-    location.X = Target->GetActorLocation().X;
-    location.Y = Target->GetActorLocation().Y;
-    location.Z = Target->GetActorLocation().Z - Target->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+    FTransform TargetTransform;
+    TargetTransform.SetLocation(TargetLocation);
+    TargetCharacterCircle = GetWorld()->SpawnActor<ATargetingCircle>(TargetingCircleClass, TargetTransform);
 
-    transform.SetLocation(location);
-    TargetCharacterCircle = GetWorld()->SpawnActor<ATargetingCircle>(TargetingCircleClass, transform);
-    if (Target->IsA<ACPlayer>())
+    if (TargetCharacterCircle && Target->IsA<ACPlayer>())
+    {
         TargetCharacterCircle->SetColorWhite();
-
+    }
 }
 
 void AMainPlayerController::DestroyTargetCharacterCircle()
 {
     if (TargetCharacterCircle)
+    {
         TargetCharacterCircle->Destroy();
-
+    }
     TargetCharacterCircle = nullptr;
 }
 
-void AMainPlayerController::ShowEnemyInfo(FString Name, int CurHealth, int MaxHealth)
+void AMainPlayerController::ShowEnemyInfo(FString Name, int32 CurHealth, int32 MaxHealth)
 {
     CombatUI->ShowEnemyInfo(Name, CurHealth, MaxHealth);
 }
@@ -110,65 +126,80 @@ void AMainPlayerController::UpdateEnemyHealth(AEnemy* Enemy)
 
 void AMainPlayerController::ChangePlayer(ACPlayer* NewPlayer)
 {
-    if (GetCurPlayerStateComp()->IsMovingMode() || !BasicUI) return;
+    if (GetCurPlayerStateComp()->IsMovingMode()) 
+    {
+        return;
+    }
 
     BasicUI->ChangePlayer(NewPlayer);
 }
 
 void AMainPlayerController::AddCombatCharacter(AGameCharacter* NewCharacter)
 {
-    FCombatCharacterInfo info;
-    info.Name = NewCharacter->GetName();
-    info.Character = NewCharacter;
-    CombatCharacterInfos.Add(info);
+    FCombatCharacterInfo CharacterInfo;
+    CharacterInfo.Name = NewCharacter->GetName();
+    CharacterInfo.Character = NewCharacter;
+    CombatCharacterInfos.Add(CharacterInfo);
 }
 
-void AMainPlayerController::ExcludeCharacterInCombat(ACharacter* Char)
+void AMainPlayerController::ExcludeCharacterInCombat(ACharacter* DeadCharacter)
 {
-    if (!CombatUI)return;
-
-    CombatUI->RemoveCharButton(Char);
-    UpdateCombatCharacters(Char);
-    DestroyTargetCharacterCircle();
-}
-
-void AMainPlayerController::UpdateCombatCharacters(ACharacter* Char) // 죽은 캐릭터가 인자로 들어옴
-{
-    if (CombatCharacters.Find(Char) == INDEX_NONE) return;
-    
-    int index = CombatCharacters.Find(Char);
-    CombatCharacters.Remove(Char);
-
-    bool combatOver = true;
-    for (ACharacter* ch : CombatCharacters)
+    if (!CombatUI)
     {
-        if (ch->IsA<AEnemy>())
+        return;
+    }
+    DestroyTargetCharacterCircle();
+    CombatUI->RemoveCharButton(DeadCharacter);
+    UpdateCombatCharacters(DeadCharacter);
+}
+
+void AMainPlayerController::UpdateCombatCharacters(ACharacter* DeadCharacter) // 죽은 캐릭터가 인자로 들어옴
+{
+    if (!CombatCharacters.Contains(DeadCharacter)) 
+    {
+        return;
+    }
+    
+    // 전투 참여 캐릭터 배열에서 제거
+    int32 CharacterIndex = CombatCharacters.Find(DeadCharacter);
+    CombatCharacters.Remove(DeadCharacter);
+
+    // 살아있는 적군이 있는지 확인
+    bool bIsCombatOver = true;
+    for (ACharacter* Character : CombatCharacters)
+    {
+        if (Character->IsA<AEnemy>())
         {
-            combatOver = false;
+            bIsCombatOver = false;
             break;
         }
     }
 
-    if (combatOver)
+    if (bIsCombatOver)
     {
         FinishCombat();
         return;
     }
 
-    for (int i = 0; i < CombatCharacters.Num(); ++i)
+    for (int32 i = 0; i < CombatCharacters.Num(); ++i)
     {
-        if (index > i) continue;
+        if (CharacterIndex > i) 
+        {
+            continue;
+        }
         
-        UTurnComponent* turnComp = GetTurnComp(CombatCharacters[i]);
-        if (!turnComp) break;
-
-        turnComp->SetTurnNum(turnComp->GetTurnNum() - 1);
+        // 순서 갱신
+        UTurnComponent* TurnComp = GetTurnComp(CombatCharacters[i]);
+        if (TurnComp) 
+        {
+            TurnComp->SetTurnNum(TurnComp->GetTurnNum() - 1);
+        }
     }
 }
 
-void AMainPlayerController::PlayAction(UAnimMontage* Anim, bool NeedTarget)
+void AMainPlayerController::PlayAction(UAnimMontage* Anim, bool bIsNeedTarget)
 {
-    if (NeedTarget)
+    if (bIsNeedTarget)
     {
         PlayAttackPose(Anim);
         return;
@@ -187,54 +218,65 @@ void AMainPlayerController::PlayAttackPose(UAnimMontage* Anim)
     GetCurPlayerStateComp()->SetPrepareMode();
 }
 
-void AMainPlayerController::SetSkills(UDataTable* SkillDT)
+void AMainPlayerController::ShowSkills(UDataTable* SkillDT)
 {
-    if (!BasicUI) return;
     BasicUI->ShowSkills(SkillDT);
 
-    UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(GetCurPlayer());
-    if (weaponComp->GetCurrentWeaponType() == EWeaponType::Gun) BasicUI->ShowBulletUIBox();
-    else BasicUI->HideBulletUIBox();
-
+    UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(GetCurPlayer());
+    if (WeaponComp && WeaponComp->GetCurrentWeaponType() == EWeaponType::Gun)
+    {
+        BasicUI->ShowBulletUIBox();
+    }
+    else 
+    {
+        BasicUI->HideBulletUIBox();
+    }
 }
 
 void AMainPlayerController::DisableSkillButtons()
 {
-    if (!BasicUI) return;
     BasicUI->DisableSkillButtons();
 }
 
 void AMainPlayerController::StopAttackPose()
 {
     UAnimMontage* AttackMontage = GetCurPlayer()->GetAttackMontage();
-    if (!AttackMontage) return;
+    if (!AttackMontage) 
+    {
+        return;
+    }
 
     GetCurPlayer()->GetMesh()->GetAnimInstance()->Montage_Stop(0.6, AttackMontage);
     GetCurPlayerStateComp()->SetWaitMode();
 }
 
-void AMainPlayerController::CheckRemainingDist()
+void AMainPlayerController::UpdateMovingAbility()
 {
-    if (!IsCombatMode() || !GetCurPlayerStateComp()->IsMovingMode()) return;
+    if (!IsCombatMode() || !GetCurPlayerStateComp()->IsMovingMode())
+    {
+        return;
+    }
 
-    UTurnComponent* turnComp = GetTurnComp(GetCurPlayer());
-    if (!turnComp) return;
+    UTurnComponent* TurnComp = GetTurnComp(GetCurPlayer());
+    if (!TurnComp) 
+    {
+        return;
+    }
 
     // 움직인 거리 구하기
-    float dist = UKismetMathLibrary::Vector_Distance(GetCurPlayer()->GetActorLocation(), ClickedLocation);
-    float movedDist = RemainingDist - dist;
+    float DistanceToTarget = UKismetMathLibrary::Vector_Distance(GetCurPlayer()->GetActorLocation(), ClickedLocation);
+    float MovedDist = RemainingDist - DistanceToTarget;
 
-    turnComp->UpdateCurMovingAbility(movedDist);
+    TurnComp->UpdateCurMovingAbility(MovedDist);
 
-    if (!BasicUI) return;
     BasicUI->SetMovingAbilityBarPercent();
-    RemainingDist = dist;
+    RemainingDist = DistanceToTarget;
 }
 
-void AMainPlayerController::CheckPlayerNotMoving()
+void AMainPlayerController::CheckPlayerMovingState()
 {
-    bool notMove = UKismetMathLibrary::EqualEqual_VectorVector(GetCurPlayer()->GetActorLocation(), PlayerPrevLocation, 10.f);
-    if (notMove) // 움직이지 않은 상태 (기존 위치 =  현재 위치)
+    bool bIsPlayerStopped = UKismetMathLibrary::EqualEqual_VectorVector(GetCurPlayer()->GetActorLocation(), PlayerLastLocation, PlayerStopThreshold);
+    if (bIsPlayerStopped) // 움직이지 않은 상태 (기존 위치 =  현재 위치)
     {
         if (GetCurPlayerStateComp()->IsMovingMode())
         {
@@ -244,183 +286,218 @@ void AMainPlayerController::CheckPlayerNotMoving()
     }
     else // 이동 중이면 기존 위치 갱신
     {
-        PlayerPrevLocation = GetCurPlayer()->GetActorLocation();
+        PlayerLastLocation = GetCurPlayer()->GetActorLocation();
     }
 }
 
 void AMainPlayerController::ClearMoveAbilityTimer()
 {
-    if (TargetSpotCircle) TargetSpotCircle->Destroy();
+    if (TargetSpotCircle) 
+    {
+        TargetSpotCircle->Destroy();
+    }
 
     TargetSpotCircle = nullptr;
 
-    if (GetWorld()->GetTimerManager().IsTimerActive(TH_CheckDist))
-        GetWorld()->GetTimerManager().ClearTimer(TH_CheckDist);
+    if (GetWorld()->GetTimerManager().IsTimerActive(CheckDistTimer))
+    {
+        GetWorld()->GetTimerManager().ClearTimer(CheckDistTimer);
+    }
 
-    if (GetWorld()->GetTimerManager().IsTimerActive(TH_CheckMoving))
-        GetWorld()->GetTimerManager().ClearTimer(TH_CheckMoving);
-
+    if (GetWorld()->GetTimerManager().IsTimerActive(CheckMovingTimer))
+    {
+        GetWorld()->GetTimerManager().ClearTimer(CheckMovingTimer);
+    }
 
     SetFixedCamera(false);
 }
 
 void AMainPlayerController::StartCombat()
 {
-    if (bCombatMode || !BasicUI) return;
-
-    bCombatMode = true;
-    for (FCombatCharacterInfo& info : CombatCharacterInfos)
+    if (bIsCombatMode) 
     {
-        UMyMovementComponent* moveComp = CHelpers::GetComponent<UMyMovementComponent>(info.Character);
-        if (moveComp) moveComp->SetStandMode(); // 이동 불가, 그 자리에 서 있기
+        return;
+    }
+
+    bIsCombatMode = true;
+    for (FCombatCharacterInfo& CharacterInfo : CombatCharacterInfos)
+    {
+        UMyMovementComponent* MoveComp = CHelpers::GetComponent<UMyMovementComponent>(CharacterInfo.Character);
+        if (MoveComp) 
+        {
+            MoveComp->SetStandMode(); // 이동 불가, 그 자리에 서 있기
+        }
 
         // 선제권 숫자 정하기
-        int num = 0;
-        while (num == 0)
+        int32 Num = 0;
+        while (Num == 0)
         {
-            num = GetRandomNumber(CombatCharacterInfos.Num());
+            Num = GetRandomNumber(CombatCharacterInfos.Num());
         }
-        info.InitiativeNum = num; //선제권 숫자 부여
+        CharacterInfo.InitiativeNum = Num; //선제권 숫자 부여
     }
 
     CombatUI = CreateWidget<UCombatUI>(this, CombatUIClass);
     CombatUI->AddToViewport();
 
-    // 선제권 숫자가 작은 순서대로(오름차순으로) 상단 UI 추가
-    int index = 1;
-    while (index - 1 != CombatCharacterInfos.Num())
+    // 선제권 숫자 기준 오름차순으로 정렬
+    CombatCharacterInfos.Sort([](const FCombatCharacterInfo& A, const FCombatCharacterInfo& B)
     {
-        for (int i = 0; i < CombatCharacterInfos.Num(); ++i)
+        return A.InitiativeNum < B.InitiativeNum;
+    });
+
+    // 선제권 숫자 기준 오름차순으로 상단 UI 추가
+    for (const FCombatCharacterInfo& CharacterInfo : CombatCharacterInfos)
+    {
+        CombatUI->AddCharButtons(CharacterInfo.Character, CharacterInfo.Name);
+        UStateComponent* StateComp = CHelpers::GetComponent<UStateComponent>(CharacterInfo.Character);
+        UTurnComponent* TurnComp = GetTurnComp(CharacterInfo.Character);
+        if (!StateComp || !TurnComp) 
         {
-            const FCombatCharacterInfo* charInfo = &CombatCharacterInfos[i];
+            return;
+        }
 
-            if (charInfo->InitiativeNum != index) continue;
+        StateComp->SetWaitMode();
+        TurnComp->SetTurnNum(CharacterInfo.InitiativeNum);
 
-            //상단 UI 추가
-            CombatUI->AddCharButtons(charInfo->Character, charInfo->Name);
-            UStateComponent* stateComp = CHelpers::GetComponent<UStateComponent>(charInfo->Character);
-            UTurnComponent* turnComp = GetTurnComp(charInfo->Character);
-
-            if (!stateComp || !turnComp) return;
-
-            stateComp->SetWaitMode();
-            turnComp->SetTurnNum(index);
-
-
-            // 플레이어 캐릭터일 경우
-            if (charInfo->Character->IsA<ACPlayer>())
+        // 플레이어 캐릭터일 경우
+        if (CharacterInfo.Character->IsA<ACPlayer>())
+        {
+            UMyMovementComponent* MoveComp = CHelpers::GetComponent<UMyMovementComponent>(CharacterInfo.Character);
+            if(MoveComp)
             {
-                UMyMovementComponent* moveComp = CHelpers::GetComponent<UMyMovementComponent>(charInfo->Character);
-                moveComp->SetMove(false);
-                ACharacter* target = FindNearestTarget(charInfo->Character);
-                charInfo->Character->SetCombatTarget(target);
-
-                if (charInfo->Character == GetCurPlayer())
-                {
-                    UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(charInfo->Character);
-                    if (weaponComp) weaponComp->SetMode(weaponComp->GetCurrentWeaponType());
-
-                    DisableSkillButtons();
-                    BasicUI->DisableEndTurnButton();
-                }
+                MoveComp->SetMove(false);
             }
 
-            CombatCharacters.Add(charInfo->Character);
+            ACharacter* Target = FindNearestTarget(CharacterInfo.Character);
+            if(Target)
+            {
+                CharacterInfo.Character->SetCombatTarget(Target);
+            }
 
-            ++index;
-        } 
+            if (CharacterInfo.Character == GetCurPlayer())
+            {
+                UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(CharacterInfo.Character);
+                if (WeaponComp) 
+                {
+                    WeaponComp->SetMode(WeaponComp->GetCurrentWeaponType());
+                }
+
+                DisableSkillButtons();
+                BasicUI->DisableEndTurnButton();
+            }
+        }
+        CombatCharacters.Add(CharacterInfo.Character);
     }
 
     BasicUI->ShowEndTurnButton();
 
-    float z = GetCurPlayer()->GetActorForwardVector().Z - 90.f;
-    FRotator newRot = FRotator(0, z, 0);
-    SetControlRotation(newRot);
+    bEnableMouseOverEvents = true;
+
+    float ZValue = GetCurPlayer()->GetActorForwardVector().Z - 90.f;
+    FRotator NewRot = FRotator(0, ZValue, 0);
+    SetControlRotation(NewRot);
 
     SetFixedCamera(true);
     StartTurn(0);
 }
 
-int AMainPlayerController::GetRandomNumber(int Max)
+int32 AMainPlayerController::GetRandomNumber(int32 Max)
 {
-    int num = UKismetMathLibrary::RandomIntegerInRange(1, Max);
-    for (const FCombatCharacterInfo info : CombatCharacterInfos)
+    int32 Num = UKismetMathLibrary::RandomIntegerInRange(1, Max);
+    for (const FCombatCharacterInfo CharInfo : CombatCharacterInfos)
     {
-        if (info.InitiativeNum == num)
+        if (CharInfo.InitiativeNum == Num)
+        {
             return 0;
+        }
     }
-    return num;
+    return Num;
 }
 
 // 전투의 처음 InCurNum은 0부터 시작, 캐릭터 배열 인덱스가 0부터 시작하므로
 // 턴이 끝난 캐릭터의 선제권 숫자가 인자로 들어옴, 첫 번째 캐릭터는 1
 // InCurNum = 0 전투 시작, InCurNum = 1 첫 번째 캐릭터의 턴이 끝남
-void AMainPlayerController::StartTurn(int InCurNum) 
+void AMainPlayerController::StartTurn(int32 InCurNum) 
 {
     // 이전 캐릭터 턴 해제
-    UTurnComponent* turnComp;
+    UTurnComponent* TurnComp;
     if (InCurNum > 0)
     {
-        turnComp = GetTurnComp(CombatCharacters[InCurNum-1]);
-        if (turnComp) turnComp->SetTurn(false);
+        TurnComp = GetTurnComp(CombatCharacters[InCurNum-1]);
+        if (TurnComp) 
+        {
+            TurnComp->SetTurn(false);
+        }
 
         BasicUI->DisableSkillButtons();  // 스킬버튼 비활성화
         BasicUI->DisableEndTurnButton(); // 턴종료버튼 비활성화
     }
 
-    int nextTurnNum;
+    int32 NextTurnNum;
     // 다음 턴 넘버 갱신
     // 모든 캐릭터의 턴이 끝남->다시 첫 번째 캐릭터부터 시작
-    if (InCurNum == CombatCharacters.Num()) nextTurnNum = 0; 
-    else nextTurnNum = InCurNum;
+    if (InCurNum == CombatCharacters.Num()) 
+    {
+        NextTurnNum = 0;
+    }
+    else 
+    {
+        NextTurnNum = InCurNum;
+    }
 
     // 다음 캐릭터 턴 활성화
-    turnComp = GetTurnComp(CombatCharacters[nextTurnNum]);
-    turnComp->SetTurn(true); 
+    TurnComp = GetTurnComp(CombatCharacters[NextTurnNum]);
+    TurnComp->SetTurn(true);
 
-    CombatUI->UpdateCharButtons(nextTurnNum); // 상단 UI 상태(Scale) 갱신
+    CombatUI->UpdateCharButtons(NextTurnNum); // 상단 UI 상태(Scale) 갱신
     SetFixedCamera(false); // 카메라 고정 해제
 }
 
-void AMainPlayerController::ActivateMouseEvent()
+void AMainPlayerController::EnableMouseClickEvent()
 {
-    bEnableMouseOverEvents = true;
     bEnableClickEvents = true;
 }
 
-void AMainPlayerController::DeactivateMouseEvent()
+void AMainPlayerController::DisableMouseClickEvent()
 {
-    bEnableMouseOverEvents = false;
     bEnableClickEvents = false;
 }
 
 void AMainPlayerController::OnMouseLeftClick()
 {
-    if (!IsCombatMode() || !GetTurnComp(GetCurPlayer())->IsMyTurn()) return;
-
-    FVector start;
-    FVector end;
-    TArray<AActor*> ignores;
-    FHitResult hitResult;
-    //마우스 좌표를 월드 좌표로 해서 가져오기
-    DeprojectMousePositionToWorld(start, end);
-    end = start + (end * 3000.f);
-
-    bool hit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), start, end, ETraceTypeQuery::TraceTypeQuery1,
-        false, ignores, EDrawDebugTrace::None, hitResult, true);
-
-    if (!hit) return;
-
-    UPlayerWeaponComponent* weaponComp = GetCurPlayer()->GetWeaponComponent();
-
-    ACharacter* target = Cast<ACharacter>(hitResult.GetActor());
-    if (target)
+    if (!IsCombatMode() || !GetTurnComp(GetCurPlayer())->IsMyTurn()) 
     {
-        if (target->IsA<AEnemy>()) // 적 클릭
-        {
-            if (weaponComp->IsMagicMode() && BasicUI->GetSelectedSkillName() == "Shield") return;
+        return;
+    }
 
-            GetCurPlayer()->SetCombatTarget(target);
+    FVector Start, End;
+    TArray<AActor*> Ignores;
+    FHitResult HitResult;
+    //마우스 좌표를 월드 좌표로 해서 가져오기
+    DeprojectMousePositionToWorld(Start, End);
+    End = Start + (End * MaxTraceLength);
+
+    bool bIsHitted = UKismetSystemLibrary::LineTraceSingle(GetWorld(), Start, End, ETraceTypeQuery::TraceTypeQuery1,
+        false, Ignores, EDrawDebugTrace::None, HitResult, true);
+
+    if (!bIsHitted) 
+    {
+        return;
+    }
+
+    UPlayerWeaponComponent* WeaponComp = GetCurPlayer()->GetWeaponComponent();
+    ACharacter* Target = Cast<ACharacter>(HitResult.GetActor());
+    if (Target && WeaponComp)
+    {
+        if (Target->IsA<AEnemy>()) // 적 클릭
+        {
+            if (WeaponComp->IsMagicMode() && BasicUI->GetSelectedSkillName() == "Shield") 
+            {
+                return;
+            }
+
+            GetCurPlayer()->SetCombatTarget(Target);
 
             if (GetCurPlayer()->CanAttack())
             {
@@ -428,17 +505,15 @@ void AMainPlayerController::OnMouseLeftClick()
             }
             return;
         }
-        else if (target->IsA<ACPlayer>())
+        else if (Target->IsA<ACPlayer>())
         {
-            if (weaponComp->IsMagicMode())
+            if (WeaponComp->IsMagicMode()) // 마법 모드일 때만
             {
-                GetCurPlayer()->SetCombatTarget(target);
+                GetCurPlayer()->SetCombatTarget(Target);
 
                 if (GetCurPlayer()->CanAttack())
                 {
                     GetCurPlayer()->Attack();
-                    DestroyTargetCharacterCircle();
-                    DeactivateMouseEvent();
                 }
             }
         }
@@ -451,102 +526,131 @@ void AMainPlayerController::OnMouseLeftClick()
         return;
     }
 
-    FNavLocation projectedLoc;
-    UNavigationSystemV1* navSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+    FNavLocation ProjectedLoc;
+    UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
 
-    bool b = navSystem->ProjectPointToNavigation(hitResult.Location, projectedLoc);
-    
-    if (!b) // AI가 갈 수 없는 곳
+    bool bIsValidPoint = NavSystem->ProjectPointToNavigation(HitResult.Location, ProjectedLoc);
+    if (!bIsValidPoint) // AI가 갈 수 없는 곳
     {
         CombatUI->ShowMessage(EMessage::WrongSpot);
         return;
     }
 
-    if (GetCurPlayerStateComp()->IsAttackMode()) return;
-   
-    float dist = UKismetMathLibrary::Vector_Distance(GetCurPlayer()->GetActorLocation(), projectedLoc);
-
-    bool canMove = GetTurnComp(GetCurPlayer())->CanMove(dist);
-
-    if (canMove) // 클릭한 위치까지 (현재 이동력으로) 이동 가능한지
+    if (GetCurPlayerStateComp()->IsAttackMode()) 
     {
-        FTransform transform;
-        transform.SetLocation(projectedLoc.Location);
-        transform.SetScale3D(FVector(1.f, 0.4f, 0.4f));
+        return;
+    }
+   
+    float DistandToTargetLoc = UKismetMathLibrary::Vector_Distance(GetCurPlayer()->GetActorLocation(), ProjectedLoc);
 
-        if (TargetSpotCircle) TargetSpotCircle->Destroy();
-        TargetSpotCircle = GetWorld()->SpawnActor<ATargetingCircle>(TargetingCircleClass, transform);
-        if (TargetSpotCircle) TargetSpotCircle->SetColorGreen();
+    bool bCanMove = GetTurnComp(GetCurPlayer())->CanMove(DistandToTargetLoc);
 
-        ClickedLocation = projectedLoc.Location;
-        RemainingDist = dist;
+    if (bCanMove) // 클릭한 위치까지 (현재 이동력으로) 이동 가능한지
+    {
+        FTransform CircleTransform;
+        CircleTransform.SetLocation(ProjectedLoc.Location);
+        CircleTransform.SetScale3D(FVector(1.f, 0.4f, 0.4f));
+
+        if (TargetSpotCircle) 
+        {
+            TargetSpotCircle->Destroy();
+        }
+        TargetSpotCircle = GetWorld()->SpawnActor<ATargetingCircle>(TargetingCircleClass, CircleTransform);
+        if (TargetSpotCircle) 
+        {
+            TargetSpotCircle->SetColorGreen();
+        }
+
+        ClickedLocation = ProjectedLoc.Location;
+        RemainingDist = DistandToTargetLoc;
 
         GetCurPlayer()->MoveInCombat(ClickedLocation);
-        GetWorld()->GetTimerManager().SetTimer(TH_CheckDist, this, &AMainPlayerController::CheckRemainingDist, 0.05f, true);
-        PlayerPrevLocation = GetCurPlayer()->GetActorLocation();
-        GetWorld()->GetTimerManager().SetTimer(TH_CheckMoving, this, &AMainPlayerController::CheckPlayerNotMoving, 1.f, true);
+        GetWorld()->GetTimerManager().SetTimer(CheckDistTimer, this, &AMainPlayerController::UpdateMovingAbility, 0.05f, true);
+        PlayerLastLocation = GetCurPlayer()->GetActorLocation();
+        GetWorld()->GetTimerManager().SetTimer(CheckMovingTimer, this, &AMainPlayerController::CheckPlayerMovingState, 1.f, true);
     }
     else // 이동 불가
     {
-        UMyMovementComponent* moveComp = CHelpers::GetComponent<UMyMovementComponent>(GetCurPlayer());
-        moveComp->SetStandMode();
+        UMyMovementComponent* MoveComp = CHelpers::GetComponent<UMyMovementComponent>(GetCurPlayer());
+        if(MoveComp)
+        {
+            MoveComp->SetStandMode();
+        }
         CombatUI->ShowMessage(EMessage::CannotMove);
     }
 }
 
 ACharacter* AMainPlayerController::FindNearestTarget(ACharacter* Self)
 {
-    AActor* nearestTarget = nullptr;
-    TArray<AActor*> targets;
-
-    float nearestDistance = std::numeric_limits<float>::max(); // float 최대값으로 초기화
+    AActor* NearestTarget = nullptr;
+    TArray<AActor*> Targets;
 
     if (Self->IsA<ACPlayer>())    // 본인이 아군이라면 타겟은 적군 캐릭터들
-        UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), targets);
-    else if (Self->IsA<AEnemy>()) // 본인이 적군이라면 타겟은 아군 캐릭터들
-        UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACPlayer::StaticClass(), targets);
-
-    for (AActor* target : targets)
     {
-        float dist = UKismetMathLibrary::Vector_Distance(target->GetActorLocation(), Self->GetActorLocation());
+        UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), Targets);
+    }
+    else if (Self->IsA<AEnemy>()) // 본인이 적군이라면 타겟은 아군 캐릭터들
+    {
+        UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACPlayer::StaticClass(), Targets);
+    }
 
-        if (dist < nearestDistance) // 본인과 가장 가까이 있는 타겟 찾기
+    float NearestDistance = std::numeric_limits<float>::max(); // float 최대값으로 초기화
+
+    for (AActor* Target : Targets)
+    {
+        float DistandToTarget = UKismetMathLibrary::Vector_Distance(Target->GetActorLocation(), Self->GetActorLocation());
+
+        if (DistandToTarget < NearestDistance) // 본인과 가장 가까이 있는 타겟 찾기
         {
-            nearestDistance = dist;
-            nearestTarget = target;
+            NearestDistance = DistandToTarget;
+            NearestTarget = Target;
         }
     }
 
-    if (nearestTarget) return Cast<ACharacter>(nearestTarget);
+    if (NearestTarget) 
+    {
+        return Cast<ACharacter>(NearestTarget);
+    }
 
-    return Cast<ACharacter>(targets[0]);
+    return nullptr;
 }
 
 void AMainPlayerController::FinishCombat()
 {
-    bCombatMode = false;
-    CombatUI->RemoveFromViewport();//SetVisibility(ESlateVisibility::Hidden);
+    bIsCombatMode = false;
+    CombatUI->RemoveFromViewport();
     BasicUI->HideEndTurnButton();
-
     SetFixedCamera(false);
-    for (ACharacter* character : CombatCharacters)
+
+    for (ACharacter* Character : CombatCharacters)
     {
-        ACPlayer* player = Cast<ACPlayer>(character);
-        if (!player) return;
+        ACPlayer* Player = Cast<ACPlayer>(Character);
+        if (!Player) 
+        {
+            return;
+        }
 
-        player->SetCombatTarget(nullptr);
+        Player->SetCombatTarget(nullptr);
 
-        UStateComponent* stateComp = CHelpers::GetComponent<UStateComponent>(player);
-        if (stateComp) stateComp->SetIdleMode();
+        if (UStateComponent* StateComp = CHelpers::GetComponent<UStateComponent>(Player))
+        {
+            StateComp->SetIdleMode();
+        }
 
-        UTurnComponent* turnComp = GetTurnComp(player);
-        if (turnComp) turnComp->SetTurn(false);
+        if (UTurnComponent* TurnComp = GetTurnComp(Player))
+        {
+            TurnComp->SetTurn(false);
+        }
 
-        UPlayerWeaponComponent* weaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(player);
-        if (weaponComp) weaponComp->UnEquip();
+        if (UPlayerWeaponComponent* WeaponComp = CHelpers::GetComponent<UPlayerWeaponComponent>(Player))
+        {
+            WeaponComp->UnEquip();
+        }
 
-        UMyMovementComponent* moveComp = CHelpers::GetComponent<UMyMovementComponent>(player);
-        if (moveComp) moveComp->SetWalkMode();
+        if (UMyMovementComponent* MoveComp = CHelpers::GetComponent<UMyMovementComponent>(Player))
+        {
+            MoveComp->SetWalkMode();
+        }
         
         BasicUI->RemoveAllSkillHoverEffect();
     }
@@ -559,40 +663,49 @@ void AMainPlayerController::FinishCombat()
 
 void AMainPlayerController::StartFollowingPlayer()
 {
-    if (!BasicUI) return;
-
-    for (ACPlayer* player : *BasicUI->GetPlayers())
+    for (ACPlayer* Player : *BasicUI->GetPlayers())
     {
-        if (player != GetCurPlayer())
-            player->FollowCurrentPlayer();
+        if (Player != GetCurPlayer())
+        {
+            Player->FollowCurrentPlayer();
+        }
     }
 }
 
 void AMainPlayerController::CancelSelectedSkill()
 {
-    if (!BasicUI) return;
-
     BasicUI->CancelSelectedSkill();
 }
 
-void AMainPlayerController::UpdateBulletText(int CurBullet, int MaxBullet)
+void AMainPlayerController::UpdateBulletText(int32 CurBullet, int32 MaxBullet)
 {
-    if (!BasicUI) return;
-
     BasicUI->UpdateBulletText(CurBullet, MaxBullet);
 }
 
 float AMainPlayerController::GetSkillDamage()
 {
-    if (!BasicUI) return 0.f;
-
     return BasicUI->GetSkillDamage();
 }
 
 FString AMainPlayerController::GetSelectedSkillName()
 {
-    if (!BasicUI) return "";
-
     return BasicUI->GetSelectedSkillName();
 }
 
+void AMainPlayerController::EndTurn()
+{
+    TurnComp = GetTurnComp(GetCurPlayer());
+    StateComp = GetCurPlayerStateComp();
+    if (!TurnComp || !StateComp || !TurnComp->IsMyTurn() || StateComp->IsMovingMode() || StateComp->IsAttackMode())
+    {
+        return;
+    }
+
+    if (StateComp->IsPrepareMode() && BasicUI)
+    {
+        BasicUI->StopPrepareMode();
+    }
+
+    StateComp->SetWaitMode();
+    StartTurn(TurnComp->GetTurnNum());
+}

@@ -147,7 +147,7 @@ void UPlayerWeaponComponent::SetSkillIcons()
 {
 	if (MAINPC) 
 	{
-		MAINPC->SetSkills(CurrentWeapon->GetSkillInfoDT());
+		MAINPC->ShowSkills(CurrentWeapon->GetSkillInfoDT());
 	}
 }
 

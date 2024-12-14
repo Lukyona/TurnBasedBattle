@@ -26,129 +26,148 @@ class TB_PROJECT_API AMainPlayerController : public APlayerController
 	GENERATED_BODY()
 
 	AMainPlayerController();
+protected:
+	virtual void BeginPlay() override;
+
 
 	static AMainPlayerController* MainPlayerController;
 
-	bool bCombatMode;
-	bool bFixedCamera;
+	bool bIsCombatMode;
+	bool bIsFixedCamera;
 	
-	FVector ClickedLocation;
-	FVector PlayerPrevLocation;
-	float RemainingDist;
+	UPROPERTY()
+	UStateComponent* StateComp;
+	UPROPERTY()
+	UTurnComponent* TurnComp;
 
-	FTimerHandle TH_CheckDist;
-	FTimerHandle TH_CheckMoving;
-
-	UBasicUI* BasicUI;
-	UCombatUI* CombatUI;
-
+	UPROPERTY()
 	TArray<ACharacter*> CombatCharacters;
 	TArray<FCombatCharacterInfo> CombatCharacterInfos;
 
+	// 이동 관련
+	FVector ClickedLocation, PlayerLastLocation;
+	float RemainingDist;
+	FTimerHandle CheckDistTimer, CheckMovingTimer;
+
+	//UI Classes
+	TSubclassOf<UBasicUI> BasicUIClass;
+	TSubclassOf<UCombatUI> CombatUIClass;
+	TSubclassOf<ATargetingCircle> TargetingCircleClass;
+
+	UPROPERTY()
+	UBasicUI* BasicUI;
+	UPROPERTY()
+	UCombatUI* CombatUI;
+
+	UPROPERTY()
 	ATargetingCircle* TargetCharacterCircle;
+	UPROPERTY()
 	ATargetingCircle* TargetSpotCircle;
 
-	UStateComponent* StateComp;
-	UTurnComponent* TurnComp;
-
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
-		TSubclassOf<UBasicUI> BasicUIClass;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
-		TSubclassOf<UCombatUI> CombatUIClass;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
-		TSubclassOf<ATargetingCircle> TargetingCircleClass;
-
-	UStateComponent* GetCurPlayerStateComp();
-	UTurnComponent* GetTurnComp(ACharacter* Char);
-
-	virtual void BeginPlay() override;
-public:
-	static void SetMainPC(APlayerController* Controller);
-
+public://Getters and setters
     UFUNCTION(BlueprintCallable, BlueprintPure)
-	static AMainPlayerController* GetMainPC() { return MainPlayerController; }
+	static AMainPlayerController* GetMainPC() 
+	{
+		return MainPlayerController; 
+	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	bool IsCombatMode() { return bCombatMode; }
+	bool IsCombatMode() 
+	{
+		return bIsCombatMode; 
+	}
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Getter")
-		ACPlayer* GetCurPlayer();
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Getter")
-	UBasicUI* GetBasicUI() { return BasicUI; }
+	UBasicUI* GetBasicUI() 
+	{
+		return BasicUI; 
+	}
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Getter")
-	UCombatUI* GetCombatUI() { return CombatUI; }
+	UCombatUI* GetCombatUI() 
+	{
+		return CombatUI; 
+	}
 
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	void SetFixedCamera(bool Value) { bFixedCamera = Value; }
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	bool IsFixedCamera() { return bFixedCamera; }
+	bool IsFixedCamera() 
+	{
+		return bIsFixedCamera; 
+	}
+	void SetFixedCamera(bool Value) 
+	{
+		bIsFixedCamera = Value; 
+	}
 
+	static void SetMainPC(APlayerController* Controller);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Getter")
+	ACPlayer* GetCurPlayer();
+
+	UStateComponent* GetCurPlayerStateComp();
+	UTurnComponent* GetTurnComp(ACharacter* InCharacter);
+
+
+	//Core methods
+	// 적 UI 관련
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	void SpawnTargetCharacterCircle(ACharacter* Target);
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	void DestroyTargetCharacterCircle();
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
-		void ShowEnemyInfo(FString Name, int CurHealth, int MaxHealth);
+	void ShowEnemyInfo(FString Name, int32 CurHealth, int32 MaxHealth);
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
-		void HideEnemyInfo();
+	void HideEnemyInfo();
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
-		void UpdateEnemyHealth(AEnemy* Enemy);
+	void UpdateEnemyHealth(AEnemy* Enemy);
 
-	UFUNCTION(BlueprintCallable, Category = "Skill")
-		void SetSkills(UDataTable* SkillDT);
-	UFUNCTION(BlueprintCallable, Category = "Skill")
-		void DisableSkillButtons();
+	// 스킬 UI 관련
+	void ShowSkills(UDataTable* SkillDT);
+	void DisableSkillButtons();
 
+	// 애니메이션 관련
 	UFUNCTION(BlueprintCallable, Category = "PlayerAttack")
-	void PlayAction(UAnimMontage* Anim, bool NeedTarget);
+	void PlayAction(UAnimMontage* Anim, bool bIsNeedTarget);
 	UFUNCTION(BlueprintCallable, Category = "PlayerAttack")
 	void PlayAttackPose(UAnimMontage* Anim);
 	UFUNCTION(BlueprintCallable, Category = "PlayerAttack")
 	void StopAttackPose();
 
-	UFUNCTION(Category = "PlayerMove")
-	void CheckRemainingDist();
-	UFUNCTION(Category = "PlayerMove")
-	void CheckPlayerNotMoving();
-	UFUNCTION(Category = "PlayerMove")
+	// 전투 중 플레이어 이동 관련
+	void UpdateMovingAbility();
+	void CheckPlayerMovingState();
 	void ClearMoveAbilityTimer();
 
-	UFUNCTION(BlueprintCallable, Category = "CombatSystem")
-	void StartCombat();
-	UFUNCTION(BlueprintCallable, Category = "CombatSystem")
-	int GetRandomNumber(int Max);
-	UFUNCTION(BlueprintCallable, Category = "CombatSystem")
-	void StartTurn(int InCurNum);
-
-	UFUNCTION(BlueprintCallable, Category = "MouseEvent")
-	void ActivateMouseEvent();
-	UFUNCTION(BlueprintCallable, Category = "MouseEvent")
-	void DeactivateMouseEvent();
-
+	//마우스 클릭 관련
 	void OnMouseLeftClick();
+	UFUNCTION(BlueprintCallable, Category = "MouseEvent")
+	void EnableMouseClickEvent();
+	UFUNCTION(BlueprintCallable, Category = "MouseEvent")
+	void DisableMouseClickEvent();
 
-	UFUNCTION(BlueprintCallable, Category = "CombatCharacters")
+	// 전투 관련
+	void StartCombat();
+	void FinishCombat();
+
+	void StartTurn(int32 InCurNum);
+	UFUNCTION(BlueprintCallable)
+	void EndTurn();
+
+	int32 GetRandomNumber(int32 Max);
+	ACharacter* FindNearestTarget(ACharacter* Self);
+
 	void AddCombatCharacter(AGameCharacter* NewCharacter);
-	UFUNCTION(BlueprintCallable, Category = "CombatCharacters")
-	void ExcludeCharacterInCombat(ACharacter* Char);
-	UFUNCTION(BlueprintCallable, Category = "CombatCharacters")
-	void UpdateCombatCharacters(ACharacter* Char);
+	void ExcludeCharacterInCombat(ACharacter* DeadCharacter);
+	void UpdateCombatCharacters(ACharacter* DeadCharacter);
 
+	//플레이어 조작 관련
+	void StartFollowingPlayer();
 	UFUNCTION(BlueprintCallable)
 	void ChangePlayer(ACPlayer* NewPlayer);
 
-	ACharacter* FindNearestTarget(ACharacter* Self);
 
-	void FinishCombat();
-
-	void StartFollowingPlayer();
-
-	// BasicUI
+	// BasicUI의 함수를 호출해줌
 	void CancelSelectedSkill();
-	void UpdateBulletText(int CurBullet, int MaxBullet);
+	void UpdateBulletText(int32 CurBullet, int32 MaxBullet);
 	float GetSkillDamage();
 	FString GetSelectedSkillName();
+
 };
