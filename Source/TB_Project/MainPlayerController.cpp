@@ -61,6 +61,7 @@ void AMainPlayerController::BeginPlay()
 void AMainPlayerController::SetMainPC(APlayerController* Controller)
 {
     MainPlayerController = Cast<AMainPlayerController>(Controller);
+    checkf(MainPlayerController, TEXT("MainPlayerController failed! Game cannot continue."));
 }
 
 ACPlayer* AMainPlayerController::GetCurPlayer()
@@ -439,6 +440,7 @@ void AMainPlayerController::StartTurn(int32 InCurNum)
     if (InCurNum == CombatCharacters.Num()) 
     {
         NextTurnNum = 0;
+        ++CurrentRound;
     }
     else 
     {
@@ -617,6 +619,7 @@ ACharacter* AMainPlayerController::FindNearestTarget(ACharacter* Self)
 void AMainPlayerController::FinishCombat()
 {
     bIsCombatMode = false;
+    CurrentRound = 0;
     CombatUI->RemoveFromViewport();
     BasicUI->HideEndTurnButton();
     SetFixedCamera(false);

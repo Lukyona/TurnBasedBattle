@@ -22,4 +22,11 @@ protected:
     UPROPERTY(VisibleAnywhere)
 	TArray<TSubclassOf<AActor>> MagicSkills;
 
+	FTimerHandle CheckValidTimer;
+
+	AActor* Magic;
+
+	int32 SpawnedRound;
+
+	void CheckStateValidity();
 };

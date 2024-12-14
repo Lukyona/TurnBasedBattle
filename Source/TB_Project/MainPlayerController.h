@@ -36,6 +36,8 @@ protected:
 
 	bool bIsCombatMode;
 	bool bIsFixedCamera;
+
+	int32 CurrentRound = 0;
 	
 	UPROPERTY()
 	UMyMovementComponent* MoveComp;
@@ -82,6 +84,11 @@ public://Getters and setters
 	bool IsCombatMode() 
 	{
 		return bIsCombatMode; 
+	}
+
+	int32 GetCurrentRound()
+	{
+		return CurrentRound;
 	}
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Getter")
