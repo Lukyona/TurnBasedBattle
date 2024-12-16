@@ -13,5 +13,4 @@
 [언리얼 턴제 전투 Yutube Link](https://youtu.be/Pp9vFBqveSk)
 
 ## Foot IK 적용
-![FootIk](https://github.com/user-attachments/assets/47c7ab39-c217-4990-af86-f4dae95d454d)
-
+![FootIk](https://github.com/user-attachments/assets/2bf8683e-e8ad-48e2-af82-1d212157c8a9)
