@@ -4,8 +4,11 @@
 #include "Weapons/Gun.h"
 #include "Components/CapsuleComponent.h"
 #include "Global.h"
+#include "Character/CPlayer.h"
+#include "Character/PlayerAnimInstance.h"
 #include "Weapons/Bullet.h"
 
+constexpr float CombatAimOffsetZ = 100.f;
 AGun::AGun()
 {
     USkeletalMesh* Mesh;
@@ -41,12 +44,18 @@ void AGun::Shoot()
     }
 
     Bullet->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-    FVector Direction = GetOwnerCharacter()->GetCapsuleComponent()->GetForwardVector();
-    Bullet->Shoot(Direction);
+    ACPlayer* Player = Cast<ACPlayer>(GetOwnerCharacter());
+    if (Player)
+    {
+        FVector BulletLoc = Player->GetMesh()->GetSocketLocation("BulletSocket");
+        FVector TargetLoc = Player->GetCombatTarget()->GetActorLocation();
+        TargetLoc.Z -= CombatAimOffsetZ;
+        FVector Direction = TargetLoc - BulletLoc;
+        Bullet->Shoot(Direction);
 
-    --CurBullet;
-
-    MAINPC->UpdateBulletText(CurBullet, MaxBullet);
+        --CurBullet;
+        MAINPC->UpdateBulletText(CurBullet, MaxBullet);
+    }
 }
 
 void AGun::Reload()

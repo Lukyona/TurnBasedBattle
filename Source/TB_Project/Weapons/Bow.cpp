@@ -45,8 +45,14 @@ void ABow::Shoot()
     }
 
     Arrow->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-    FVector Direction = GetOwnerCharacter()->GetCapsuleComponent()->GetForwardVector();
-    Arrow->Shoot(Direction);
+    ACPlayer* Player = Cast<ACPlayer>(GetOwnerCharacter());
+    if (Player)
+    {
+        FVector ArrowLoc = Player->GetMesh()->GetSocketLocation("arrow_nock");
+        FVector TargetLoc = Player->GetCombatTarget()->GetActorLocation();
+        FVector Direction = TargetLoc - ArrowLoc;
+        Arrow->Shoot(Direction);
+    }
 }
 
 void ABow::UnEquip()

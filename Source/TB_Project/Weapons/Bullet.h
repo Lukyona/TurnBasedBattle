@@ -19,5 +19,4 @@ public:
 private:
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* StaticMesh;
-
 };

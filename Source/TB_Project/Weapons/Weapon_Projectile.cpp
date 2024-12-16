@@ -61,5 +61,5 @@ void AWeapon_Projectile::Shoot(FVector Direction)
 	Projectile->Velocity = Direction * Projectile->InitialSpeed;
 	Projectile->Activate();
 
-	SetLifeSpan(2.f);
+	//SetLifeSpan(2.f);
 }
