@@ -12,5 +12,18 @@
 ## 🎞️ 게임 영상
 [언리얼 턴제 전투 Yutube Link](https://youtu.be/Pp9vFBqveSk)
 
+
 ## Foot IK 적용
 ![FootIk](https://github.com/user-attachments/assets/2bf8683e-e8ad-48e2-af82-1d212157c8a9)
+FeetComponent를 만들어 매 프레임마다 캐릭터의 발 위치를 기반으로
+LineTrace를 수행하여 지형의 높이와 기울기를 계산한다.
+이 정보를 바탕으로 힙 오프셋을 조정, 동시에 각 발의 위치와 회전을 계산 및 보간하여
+캐릭터의 발이 지형에 밀착되도록 한다.
+애님블루프린트에서 본의 트랜스폼을 조정한 후, 2본 IK 노드를 활용해 본의 위치와 회전을 자연스럽게 보정한다.
+
+
+## 선제권 기반 턴제 전투
+![선제권](https://github.com/user-attachments/assets/23764b47-5285-48f9-a8d3-aa4a0c7e3b18)
+선제권 숫자를 기반으로 상단에 오름차순으로 정렬되며
+현재 행동 중인 유닛의 초상화는 약간 더 크게 강조된다.
+유닛이 본인의 턴을 종료해야 다음 유닛에게 행동 기회가 주어진다.
