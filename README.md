@@ -78,11 +78,39 @@
 이 방향에 따라 **다른 몽타주**를 재생하게 된다.
 
 
+## 📍 화면에 피해량 표시(데미지 텍스트)
+![DamageTextActor](https://github.com/user-attachments/assets/e3a68a2c-2427-4b75-a889-4eb805be84a2)
+
+위젯 컴포넌트와 타임라인 컴포넌트를 가진 액터
+
+
+![Curve](https://github.com/user-attachments/assets/fd676d29-5a0e-45e9-a1a7-e285afbe2f84)
+
+타임라인에 사용된 Float 커브
+
+
+![DamageTextInGame](https://github.com/user-attachments/assets/c66ffbfd-8e43-41a5-9bef-a7040e9bf552)
+
+
+인게임 내에서 적용된 모습.
+
+
+위젯 컴포넌트를 활용하여 화면 상에 3D 위젯 형태로 피해량을 출력하고
+
+
+타임라인과 커브를 이용하여 텍스트가 점진적으로 위로 이동하게 만들었습니다.
+
+
+또한 항상 플레이어 카메라를 향하도록 회전 업데이트를 통해 카메라가 어느 방향으로 회전하든 피해량을 바로 확인할 수 있습니다.
+
+
+타임라인이 종료되면 액터를 삭제하도록 콜백함수를 등록했습니다.
+
+
 ## 📍 경고 메세지
 ![경고](https://github.com/user-attachments/assets/7a0ae0d7-c1f9-4819-8340-6ae7bfbb52ce)
 
+
 **행동이 불가**할 경우 경고 메세지가 표시된다.
-
-
 
 
