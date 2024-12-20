@@ -11,7 +11,7 @@
 5개월
 
 ## 🎞️ 게임 영상
-[언리얼 턴제 전투 (YUTUBE)](https://youtu.be/Pp9vFBqveSk)
+[언리얼 턴제 전투 (YUTUBE)](https://youtu.be/o7kSz3OnQvM))
 
 
 
